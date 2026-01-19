@@ -1,0 +1,29 @@
+{
+  "name": "kokoushuoneiden-varaus-api",
+  "version": "1.0.0",
+  "description": "Tämä sovellus on ennakkotehtävä Vincitille, osana rekrytointiprosessia. Se on toteutettu tammikuussa vuonna 2026.",
+  "main": "app.js",
+  "scripts": {
+    "test": "jest",
+    "start": "node src/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tanelimanninen/Kokoushuoneiden-varaus-API.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/tanelimanninen/Kokoushuoneiden-varaus-API/issues"
+  },
+  "homepage": "https://github.com/tanelimanninen/Kokoushuoneiden-varaus-API#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "jest": "^30.2.0",
+    "supertest": "^7.2.2"
+  }
+}

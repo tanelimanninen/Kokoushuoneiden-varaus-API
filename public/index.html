@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Kokoushuonevaraukset</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <h1>Kokoushuoneiden varaus</h1>
+
+  <section>
+    <h2>Luo varaus</h2>
+    <input id="room" placeholder="Huone" />
+    <input id="start" type="datetime-local" />
+    <input id="end" type="datetime-local" />
+    <button id="createBtn">Varaa</button>
+  </section>
+
+  <section>
+    <h2>Huoneen varaukset</h2>
+    <input id="searchRoom" placeholder="Huone" />
+    <button id="searchBtn">Hae</button>
+    <ul id="reservations"></ul>
+  </section>
+
+  <script src="main.js"></script>
+</body>
+</html>
