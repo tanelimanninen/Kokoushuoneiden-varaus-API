@@ -7,7 +7,7 @@ const app = express();
 app.use(express.json());
 
 // Frontend
-app.use(express.static(path.join(__dirname, "../public")));
+app.use(express.static(path.join(__dirname, "../../frontend")));
 
 // API
 app.use("/api/reservations", reservationRoutes);

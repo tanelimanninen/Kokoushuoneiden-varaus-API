@@ -2,7 +2,7 @@
   "name": "kokoushuoneiden-varaus-api",
   "version": "1.0.0",
   "description": "Tämä sovellus on ennakkotehtävä Vincitille, osana rekrytointiprosessia. Se on toteutettu tammikuussa vuonna 2026.",
-  "main": "app.js",
+  "main": "src/app.js",
   "scripts": {
     "test": "jest",
     "start": "node src/server.js"
