@@ -7,7 +7,7 @@ async function createReservation() {
   const endTime = document.getElementById("end").value;
 
   if (!room || !startTime || !endTime) {
-    alert("Täytä kaikki kentät");
+    showAlert("Täytä kaikki kentät", "error");
     return;
   }
 
@@ -27,16 +27,16 @@ async function createReservation() {
       } catch {
         // Ei JSONia → käytetään oletusvirhettä
       }
-      alert(errMsg);
+      showAlert(errMsg, "error");
       return;
     }
 
     const reservation = await response.json();
-    alert("Varaus luotu");
+    showAlert("Varaus luotu", "success");
     loadReservations();
 
   } catch (err) {
-    alert("Palvelinvirhe: " + err.message);
+    showAlert("Palvelinvirhe: ", err.message);
   }
 }
 
@@ -82,14 +82,42 @@ async function deleteReservation(id) {
   });
 
   if (response.status === 204) {
-    alert("Varaus poistettu");
+    showAlert("Varaus poistettu", "success");
     loadReservations(); // Päivitetään lista automaattisesti
   } else {
     const err = await response.json();
-    alert(err.error || "Varauksen poisto epäonnistui");
+    console.log(err);
+    showAlert("Varauksen poisto epäonnistui", "error");
   }
 }
 
 function formatDate(dateString) {
   return new Date(dateString).toLocaleString("fi-FI");
+}
+
+// ehdollistettu ja automatisoitu funktio popup-ilmoituksille
+function showAlert(message, type = "success", duration = 3000) {
+  const container = document.getElementById("alert-container");
+
+  const alert = document.createElement("div");
+  alert.className = `custom-alert ${type}`;
+
+  // Alertin ikoni
+  const icon = document.createElement("img");
+  icon.className = "alert-icon";
+  icon.src = type === "error" ? "./assets/circle-exclamation-solid-full.svg" : "./assets/circle-check-solid-full.svg";
+  icon.alt = type;
+
+  // Alertin teksti
+  const text = document.createElement("span");
+  text.textContent = message;
+
+  alert.appendChild(icon);
+  alert.appendChild(text);
+  container.appendChild(alert);
+
+  setTimeout(() => {
+    alert.style.opacity = "0";
+    setTimeout(() => alert.remove(), 300);
+  }, duration);
 }

@@ -64,8 +64,7 @@ li button:hover {
   min-width: 100%;
   padding-bottom: 30px;
   background-color: #ffcaff;
- 
-  
+  border-bottom: 0.5px solid rgb(120, 120, 120);
 }
 
 .reservation-form input, select {
@@ -85,4 +84,41 @@ li button:hover {
 
 .reservation-list select {
   background-color: rgb(240, 240, 240);
+}
+
+#alert-container {
+  position: fixed;
+  left: 50%;
+  transform: translate(-50%, 0%);
+  z-index: 1000;
+  margin-top: 5px;
+}
+
+.custom-alert {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: #fbfbf6;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0.5px 0.5px rgb(36, 36, 36);
+  font-weight: 500;
+  opacity: 1;
+  transition: opacity 0.1s ease;
+}
+
+.custom-alert.error {
+  background-color: #eb7062;
+  border: 3px solid #e22f1a;
+}
+
+.custom-alert.success {
+  background-color: #8a9c8c;
+  border: 3px solid #388641;
+}
+
+.alert-icon {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
 }
