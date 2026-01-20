@@ -1064,3 +1064,387 @@ Näin voit varmistaa kaikkien kolmen polun toimivuuden.
 Jos haluat, voin seuraavaksi kirjoittaa valmiit testikokoelma-asetukset Postmaniin, niin voit klikata “Run” ja testit ajetaan automaattisesti.
 
 Haluatko, että teen sen?
+
+### Minä:
+
+*Luodaan projektiin vielä automatisoidut testit apin poluille jestillä.*
+
+### AI:
+
+Loistavaa! 😄 Tehdään backendille automatisoidut testit Jestillä + Supertestillä, jotta kaikki kolme polkua (luonti, katselu, peruutus) voidaan testata nopeasti ja toistettavasti.
+
+Tässä ohjeet vaihe vaiheelta.
+
+#### 1️⃣ Asenna riippuvuudet
+```
+npm install --save-dev jest supertest
+```
+Päivitä package.json:
+```
+"scripts": {
+  "start": "node src/server.js",
+  "test": "jest"
+}
+```
+#### 2️⃣ Luo testihakemisto
+```
+project/
+└── tests/
+    └── reservations.test.js
+```
+#### 3️⃣ Testitiedosto: tests/reservations.test.js
+```
+const request = require("supertest");
+const app = require("../src/app");
+
+describe("Reservations API", () => {
+  let reservationId;
+
+  // Testataan varauksen luonti
+  test("POST /api/reservations - luo varaus", async () => {
+    const response = await request(app)
+      .post("/api/reservations")
+      .send({
+        room: "Testihuone",
+        startTime: "2026-01-20T10:00",
+        endTime: "2026-01-20T11:00"
+      });
+
+    expect(response.statusCode).toBe(201);
+    expect(response.body.id).toBeDefined();
+    expect(response.body.room).toBe("Testihuone");
+    reservationId = response.body.id;
+  });
+
+  // Testataan varausten katselu
+  test("GET /api/reservations/:room - listaa varaukset", async () => {
+    const response = await request(app)
+      .get("/api/reservations/Testihuone");
+
+    expect(response.statusCode).toBe(200);
+    expect(Array.isArray(response.body)).toBe(true);
+    expect(response.body.length).toBeGreaterThan(0);
+    expect(response.body[0].room).toBe("Testihuone");
+  });
+
+  // Testataan varauksen peruutus
+  test("DELETE /api/reservations/:id - poista varaus", async () => {
+    const response = await request(app)
+      .delete(`/api/reservations/${reservationId}`);
+
+    expect(response.statusCode).toBe(204);
+  });
+
+  // Testataan peruutuksen epäonnistuminen (ei löydy)
+  test("DELETE /api/reservations/:id - epäonnistuu, jos varaus ei ole olemassa", async () => {
+    const response = await request(app)
+      .delete("/api/reservations/9999");
+
+    expect(response.statusCode).toBe(404);
+    expect(response.body.error).toBe("Varausta ei löytynyt");
+  });
+
+  // Testataan päällekkäisen varauksen estäminen
+  test("POST /api/reservations - estää päällekkäisen varauksen", async () => {
+    // Luo ensimmäinen varaus
+    await request(app)
+      .post("/api/reservations")
+      .send({
+        room: "OverlapHuone",
+        startTime: "2026-01-20T10:00",
+        endTime: "2026-01-20T11:00"
+      });
+
+    // Yritä päällekkäistä
+    const response = await request(app)
+      .post("/api/reservations")
+      .send({
+        room: "OverlapHuone",
+        startTime: "2026-01-20T10:30",
+        endTime: "2026-01-20T11:30"
+      });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.error).toBe("Aikaväli on jo varattu");
+  });
+});
+```
+#### 4️⃣ Testien ajaminen
+```
+npm test
+```
+Jest ajaa kaikki testit, ja näet konsolissa tuloksen:
+```
+PASS  tests/reservations.test.js
+  Reservations API
+    ✓ POST /api/reservations - luo varaus (xx ms)
+    ✓ GET /api/reservations/:room - listaa varaukset (xx ms)
+    ✓ DELETE /api/reservations/:id - poista varaus (xx ms)
+    ✓ DELETE /api/reservations/:id - epäonnistuu, jos varaus ei ole olemassa (xx ms)
+    ✓ POST /api/reservations - estää päällekkäisen varauksen (xx ms)
+```
+#### ✅ Mitä nämä testit kattavat
+1. Varauksen luominen (POST)
+2. Varausten katselu huoneen mukaan (GET)
+3. Varauksen poistaminen (DELETE)
+4. Virhetilanne: poisto olemattomalla ID:llä
+5. Virhetilanne: päällekkäiset varaukset estetty
+
+Haluatko, että teen seuraavaksi valmiin README-osion, jossa kerrotaan miten testit ajetaan ja miten APIa käytetään Postmanilla ja Jestillä?
+
+### Minä:
+
+*Ok, nyt apin toiminta on testattu backendissä. Lisätään käyttöliittymään vielä varauksen poistaminen.*
+
+### AI:
+
+Loistavaa! Nyt kun backend toimii ja on testattu, voimme lisätä varauksen poistamisen käyttöliittymään selaimessa.
+Tässä tehdään pieni päivitys frontendin main.js ja index.html tiedostoihin, niin käyttäjä voi klikata nappia ja poistaa varauksen.
+
+#### 1️⃣ Päivitetään index.html
+Lisätään lista varauksista siten, että jokaisella on poistonappi.
+```
+<section>
+  <h2>Huoneen varaukset</h2>
+  <input id="searchRoom" placeholder="Huone" />
+  <button id="searchBtn">Hae</button>
+  <ul id="reservations"></ul>
+</section>
+```
+Ei tarvitse muuttaa paljon, mutta varauksia renderöidessä lisätään Poista-nappi jokaiselle listan itemille.
+
+#### 2️⃣ Päivitetään main.js
+```
+document.getElementById("createBtn").addEventListener("click", createReservation);
+document.getElementById("searchBtn").addEventListener("click", loadReservations);
+
+async function createReservation() {
+  const room = document.getElementById("room").value;
+  const startTime = document.getElementById("start").value;
+  const endTime = document.getElementById("end").value;
+
+  if (!room || !startTime || !endTime) {
+    alert("Täytä kaikki kentät");
+    return;
+  }
+
+  const response = await fetch("/api/reservations", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ room, startTime, endTime })
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    alert(err.error || "Varaus epäonnistui");
+    return;
+  }
+
+  alert("Varaus luotu");
+  loadReservations(); // Päivitetään lista automaattisesti
+}
+
+async function loadReservations() {
+  const room = document.getElementById("searchRoom").value;
+  const list = document.getElementById("reservations");
+  list.innerHTML = "";
+
+  if (!room) {
+    alert("Anna huoneen nimi");
+    return;
+  }
+
+  const response = await fetch(`/api/reservations/${room}`);
+  const reservations = await response.json();
+
+  if (reservations.length === 0) {
+    list.innerHTML = "<li>Ei varauksia</li>";
+    return;
+  }
+
+  reservations.forEach(r => {
+    const li = document.createElement("li");
+    li.textContent = `${formatDate(r.startTime)} – ${formatDate(r.endTime)} (ID: ${r.id}) `;
+
+    // Luodaan poistonappi
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Poista";
+    deleteBtn.style.marginLeft = "10px";
+    deleteBtn.onclick = () => deleteReservation(r.id, room);
+
+    li.appendChild(deleteBtn);
+    list.appendChild(li);
+  });
+}
+
+async function deleteReservation(id, room) {
+  if (!confirm("Haluatko varmasti poistaa varauksen?")) return;
+
+  const response = await fetch(`/api/reservations/${id}`, {
+    method: "DELETE"
+  });
+
+  if (response.status === 204) {
+    alert("Varaus poistettu");
+    loadReservations(); // Päivitetään lista automaattisesti
+  } else {
+    const err = await response.json();
+    alert(err.error || "Varauksen poisto epäonnistui");
+  }
+}
+
+function formatDate(dateString) {
+  return new Date(dateString).toLocaleString("fi-FI");
+}
+```
+
+#### 3️⃣ Mitä muutokset tekevät
+1. Jokaiselle varaukselle luodaan Poista-nappi listassa
+2. Napin klikkaus kutsuu deleteReservation(id, room)
+3. Backendin DELETE-polku /api/reservations/:id kutsutaan
+4. Onnistuneen poiston jälkeen lista päivittyy automaattisesti
+5. Virhetilanteet (esim. varaus ei löydy) näytetään alertilla
+
+##### ✅ Nyt käyttöliittymä tukee kaikkia kolme backend-toimintoa:
+1. Luo varaus (POST)
+2. Listaa varaukset (GET)
+3. Poista varaus (DELETE)
+
+### Minä:
+
+*Miksi deleteReservation(id, room) tarvitsee room-parametrin?*
+
+### AI:
+
+Hyvä huomio! 👀
+
+deleteReservation(id, room) sai tuon room-parametrin alun perin vain siksi, että funktiosta kutsuttiin loadReservations() sen jälkeen ja ajateltiin, että voitaisiin välittää huoneen nimi suoraan.
+
+Mutta katsotaan tarkasti:
+```
+deleteReservation(r.id, room)
+```
+* r.id on varauksen ID → tarvitaan backendin DELETE-polkuun
+* room → käytettiin loadReservations(room) päivityksessä
+
+#### Ongelmakohta
+loadReservations() hakee nykyisen huoneen nimen:
+```
+const room = document.getElementById("searchRoom").value;
+```
+Eli deleteReservation() voisi itse hakea huoneen nimen suoraan syöttökentästä, eikä se tarvitse parametrina. Parametri on siis ylimääräinen.
+
+#### Parempi versio
+```
+async function deleteReservation(id) {
+  if (!confirm("Haluatko varmasti poistaa varauksen?")) return;
+
+  const response = await fetch(`/api/reservations/${id}`, { method: "DELETE" });
+
+  if (response.status === 204) {
+    alert("Varaus poistettu");
+    loadReservations(); // loadReservations hakee huoneen suoraan syöttökentästä
+  } else {
+    const err = await response.json();
+    alert(err.error || "Varauksen poisto epäonnistui");
+  }
+}
+```
+Ja nappi lisäys listan renderöinnissä:
+```
+deleteBtn.onclick = () => deleteReservation(r.id);
+```
+✅ Tämä yksinkertaistaa funktiota ja vähentää turhia parametreja.
+
+Jos haluat, voin tehdä täyden siistin version frontendistä, jossa kaikki kolme toimintoa (luo, listaa, poista) ovat selkeästi erillisinä funktioina ja ilman ylimääräisiä parametreja.
+
+Haluatko, että teen sen?
+
+### Minä:
+
+*Okei, sovelluksen URLissa UI toimii. Lisätään vielä varauksen luomiseen validointia. Varaus ei saa sijoittua menneeseen aikaan. Lisäksi aloitusajan tulee aina olla ennen lopetusaikaa.*
+
+### AI:
+
+Hienoa! Nyt voidaan lisätä varauksen validointi backendissä, jotta käyttöliittymä ei pysty luomaan epäkelpoja varauksia.
+Tarkastetaan kaksi asiaa:
+1. Varaus ei saa olla menneessä ajassa
+2. Aloitusaika < lopetusaika
+
+#### 1️⃣ Päivitetään reservationService.js
+Muokataan createReservation-funktiota:
+```
+const db = require("../data/inMemoryDb");
+const { isOverlapping } = require("../utils/timeUtils");
+
+exports.createReservation = ({ room, startTime, endTime }) => {
+  if (!room || !startTime || !endTime) {
+    throw new Error("Puuttuvat tiedot");
+  }
+
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  const now = new Date();
+
+  // 1️⃣ Aloitusaika ei saa olla menneisyydessä
+  if (start < now) {
+    throw new Error("Varauksen aloitusaika ei voi olla menneessä");
+  }
+
+  // 2️⃣ Aloitus ennen lopetusta
+  if (start >= end) {
+    throw new Error("Varauksen aloitusaika tulee olla ennen lopetusaikaa");
+  }
+
+  // 3️⃣ Tarkistetaan päällekkäisyys
+  const overlapping = db.reservations.some(r =>
+    r.room === room &&
+    isOverlapping(startTime, endTime, r.startTime, r.endTime)
+  );
+
+  if (overlapping) {
+    throw new Error("Aikaväli on jo varattu");
+  }
+
+  const reservation = {
+    id: db.nextId++,
+    room,
+    startTime,
+    endTime
+  };
+
+  db.reservations.push(reservation);
+  return reservation;
+};
+```
+
+#### 2️⃣ Mitä lisättiin
+| Validointi                               | Kuvaus                                                |
+| ---------------------------------------- | ----------------------------------------------------- |
+| `start < now`                            | Jos käyttäjä yrittää varata menneeseen aikaan → virhe |
+| `start >= end`                           | Aloitusajan on oltava ennen lopetusaikaa              |
+
+Päällekkäisyystarkistus säilyy ennallaan
+
+#### 3️⃣ Frontendin huolellisuus
+Frontendissa voidaan lisäksi estää suoraan valitsemalla min-arvo datetime-local inputille:
+```
+<input id="start" type="datetime-local" min="2026-01-19T00:00" />
+<input id="end" type="datetime-local" />
+```
+Tämä on vain käyttöliittymä-apu, mutta backendin validointi on aina pakollinen.
+
+#### 4️⃣ Testaus
+Yritä luoda varaus menneeseen aikaan → pitäisi saada virheilmoitus:
+```
+Varauksen aloitusaika ei voi olla menneessä
+```
+Yritä luoda varaus, jossa start ≥ end → virheilmoitus:
+```
+Varauksen aloitusaika tulee olla ennen lopetusaikaa
+```
+Normaalit varaukset toimivat edelleen.
+
+Jos haluat, voimme päivittää myös Jest-testit niin, että ne testavat nämä uudet validoinnit automaattisesti.
+
+Haluatko, että teen sen?
