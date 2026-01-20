@@ -17,7 +17,7 @@ describe("Reservations API - testit", () => {
         endTime: futureEnd
       });
 
-    expect(response.statusCode).toBe(201);
+    expect(response.statusCode).toBe(201); // created
     expect(response.body.id).toBeDefined();
     expect(response.body.room).toBe("Testihuone");
     reservationId = response.body.id;
@@ -28,7 +28,7 @@ describe("Reservations API - testit", () => {
     const response = await request(app)
       .get("/api/reservations/Testihuone");
 
-    expect(response.statusCode).toBe(200);
+    expect(response.statusCode).toBe(200); // OK
     expect(Array.isArray(response.body)).toBe(true);
     expect(response.body.length).toBeGreaterThan(0);
     expect(response.body[0].room).toBe("Testihuone");
@@ -39,7 +39,7 @@ describe("Reservations API - testit", () => {
     const response = await request(app)
       .delete(`/api/reservations/${reservationId}`);
 
-    expect(response.statusCode).toBe(204);
+    expect(response.statusCode).toBe(204); // no content
   });
 
   // TESTI 4: peruutuksen epäonnistuminen (ei löydy)
@@ -47,7 +47,7 @@ describe("Reservations API - testit", () => {
     const response = await request(app)
       .delete("/api/reservations/9999");
 
-    expect(response.statusCode).toBe(404);
+    expect(response.statusCode).toBe(404); // not found
     expect(response.body.error).toBe("Varausta ei löytynyt");
   });
 
@@ -71,7 +71,7 @@ describe("Reservations API - testit", () => {
         endTime: futureEnd
       });
 
-    expect(response.statusCode).toBe(400);
+    expect(response.statusCode).toBe(400); // bad request
     expect(response.body.error).toBe("Aikaväli on jo varattu");
   });
 
@@ -88,5 +88,20 @@ describe("Reservations API - testit", () => {
 
       expect(response.statusCode).toBe(400); // bad request
       expect(response.body.error).toBe("Varauksen aloitusaika ei voi olla menneessä");
-  })
+  });
+
+  // TESTI 7: estetään varaus, kun lopetusaika on ennen aloitusaikaa
+  test("POST /api/reservations - estää varauksen lopetusajan ollessa ennen aloitusaikaa", async () => {
+    // luodaan virheellinen varaus
+    const response = await request(app)
+      .post("/api/reservations")
+      .send({
+        room: "Testihuone",
+        startTime: futureStart,
+        endTime: pastTime
+      });
+
+      expect(response.statusCode).toBe(400); // bad request
+      expect(response.body.error).toBe("Varauksen aloitusaika tulee olla ennen lopetusaikaa");
+  });
 });
