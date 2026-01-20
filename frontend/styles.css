@@ -1,12 +1,52 @@
 body {
-  font-family: Arial, sans-serif;
-  margin: 40px;
+  font-family: Poppins;
+  margin: auto;
+  justify-items: center;
+  background-color: #fbfbf6;
 }
 
-section {
-  margin-bottom: 30px;
+button {
+  width: 50px;
+  font-weight: bold;
+  color: #fbfbf6;
+  background-color: rgb(44, 105, 210);
+  padding: 5px;
+  border-radius: 5px;
 }
 
-input, button {
-  margin: 5px;
+input, select {
+  width: 250px;
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid rgb(203, 203, 203);
+}
+
+.reservation-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 100%;
+  padding-bottom: 30px;
+  background-color: #ffcaff;
+ 
+  
+}
+
+.reservation-form input, select {
+  margin-bottom: 10px;
+  background-color: #fbfbf6;
+}
+
+.reservation-form p {
+  margin: 0px;
+}
+
+.reservation-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.reservation-list select {
+  background-color: rgb(240, 240, 240);
 }
