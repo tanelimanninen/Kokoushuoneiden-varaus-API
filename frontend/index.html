@@ -2,26 +2,25 @@
 <html lang="fi">
 <head>
   <meta charset="UTF-8" />
-  <title>Kokoushuonevaraukset</title>
+  <title>Varaussovellus</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <h1>Kokoushuoneiden varaus</h1>
+  <h1>Varaa kokoustila</h1>
 
-  <section>
-    <h2>Luo varaus</h2>
+  <div class="reservation-form">
     <input id="room" placeholder="Huone" />
     <input id="start" type="datetime-local" />
     <input id="end" type="datetime-local" />
     <button id="createBtn">Varaa</button>
-  </section>
+  </div>
 
-  <section>
-    <h2>Huoneen varaukset</h2>
+  <div class="reservation-list">
+    <h2>Hae tietyn huoneen varauksia</h2>
     <input id="searchRoom" placeholder="Huone" />
     <button id="searchBtn">Hae</button>
     <ul id="reservations"></ul>
-  </section>
+  </div>
 
   <script src="main.js"></script>
 </body>
