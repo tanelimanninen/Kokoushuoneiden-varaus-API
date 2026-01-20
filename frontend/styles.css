@@ -6,12 +6,15 @@ body {
 }
 
 button {
-  width: 50px;
+  width: 100px;
   font-weight: bold;
+  font-size: medium;
   color: #fbfbf6;
   background-color: rgb(44, 105, 210);
   padding: 5px;
-  border-radius: 5px;
+  margin-top: 10px;
+  border-radius: 50px;
+  border: 1px solid rgb(120, 120, 120);
 }
 
 input, select {
