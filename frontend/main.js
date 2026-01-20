@@ -45,14 +45,10 @@ async function loadReservations() {
   const list = document.getElementById("reservations");
   list.innerHTML = "";
 
-  if (!room) {
-    alert("Anna huoneen nimi");
-    return;
-  }
-
   const response = await fetch(`/api/reservations/${room}`);
   const reservations = await response.json();
 
+  // jos varauksia ei löydy
   if (reservations.length === 0) {
     list.innerHTML = "<li>Ei varauksia</li>";
     return;
@@ -60,16 +56,20 @@ async function loadReservations() {
 
   reservations.forEach(r => {
     const li = document.createElement("li");
-    li.textContent = `${formatDate(r.startTime)} – ${formatDate(r.endTime)} (ID: ${r.id})`;
+    li.textContent = `${formatDate(r.startTime)} – ${formatDate(r.endTime)}`;
 
     // Luodaan poistonappi
     const deleteBtn = document.createElement("button");
-    deleteBtn.textContent = "Poista";
-    deleteBtn.style.marginLeft = "10px";
+    // Luodaan ikoni
+    const icon = document.createElement("img");
+    icon.src = "./assets/circle-xmark-solid-full.svg"
+    icon.alt = "Poista varaus";
+    icon.className = "delete-icon";
+
+    deleteBtn.appendChild(icon);
     deleteBtn.onclick = () => deleteReservation(r.id);
 
     li.appendChild(deleteBtn);
-
     list.appendChild(li);
   });
 }
