@@ -2078,3 +2078,41 @@ function showAlert(message, type = "success", duration = 3000) {
 * Sama komponentti tukee eri tiloja (success, error)
 * Ikonit ovat helposti vaihdettavissa
 * Tämä on selkeä, kevyt ja täysin hallittu ratkaisu.
+
+### Minä:
+
+*Asennan nodemon-työkalun projektiin.*
+
+### AI:
+
+Hyvä 👍
+Asenna nodemon backend-kansioon kehitystyökaluksi.
+
+#### 1️⃣ Asennus
+
+Aja backend-kansiossa:
+```
+npm install --save-dev nodemon
+```
+
+#### 2️⃣ Päivitä backend/package.json
+```
+"scripts": {
+  "start": "node src/server.js",
+  "dev": "nodemon src/server.js",
+  "test": "jest"
+}
+```
+
+#### 3️⃣ Käyttö
+Kehitystilassa:
+```
+npm run dev
+```
+➡️ Backend käynnistyy uudelleen automaattisesti aina, kun muutat tiedostoja.
+
+Tuotannossa edelleen:
+```
+npm start
+```
+Tämä on oikea ja yleinen tapa käyttää nodemonia Node.js-projekteissa.
