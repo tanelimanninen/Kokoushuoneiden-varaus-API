@@ -3,6 +3,8 @@ const app = require("../src/app");
 
 describe("Reservations API - testit", () => {
   let reservationId;
+  const futureStart = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+  const futureEnd = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
 
   // Testataan varauksen luonti
   test("POST /api/reservations - luo varaus", async () => {
@@ -10,8 +12,8 @@ describe("Reservations API - testit", () => {
       .post("/api/reservations")
       .send({
         room: "Testihuone",
-        startTime: "2026-01-20T10:00",
-        endTime: "2026-01-20T11:00"
+        startTime: futureStart,
+        endTime: futureEnd
       });
 
     expect(response.statusCode).toBe(201);
@@ -55,8 +57,8 @@ describe("Reservations API - testit", () => {
       .post("/api/reservations")
       .send({
         room: "OverlapHuone",
-        startTime: "2026-01-20T10:00",
-        endTime: "2026-01-20T11:00"
+        startTime: futureStart,
+        endTime: futureEnd
       });
 
     // Yritä päällekkäistä
@@ -64,8 +66,8 @@ describe("Reservations API - testit", () => {
       .post("/api/reservations")
       .send({
         room: "OverlapHuone",
-        startTime: "2026-01-20T10:30",
-        endTime: "2026-01-20T11:30"
+        startTime: futureStart,
+        endTime: futureEnd
       });
 
     expect(response.statusCode).toBe(400);
