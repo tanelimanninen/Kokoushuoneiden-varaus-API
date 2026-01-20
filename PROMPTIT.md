@@ -1815,3 +1815,266 @@ Molemmat luovat varmasti menneeseen aikaan sijoittuvan varauksen.
 
 Selvä 👍
 Päivitys vastaanotettu ja ymmärretty.
+
+### Minä:
+
+*Päivitän seuraavaksi main.js-tiedoston loadReservations()-funktiota, koska haluan muokata li-elementin sisältöä. Poistin elementistä varauksen id-arvon ja seuraavaksi haluan muuttaa delete-buttonin sisällön svg-ikoniksi, joka minulla on jo ladattuna sovellushakemistossa:*
+```
+async function loadReservations() { const room = document.getElementById("searchRoom").value; const list = document.getElementById("reservations"); list.innerHTML = ""; const response = await fetch(/api/reservations/${room}); const reservations = await response.json(); // jos varauksia ei löydy if (reservations.length === 0) { list.innerHTML = "<li>Ei varauksia</li>"; return; } reservations.forEach(r => { const li = document.createElement("li"); li.textContent = ${formatDate(r.startTime)} – ${formatDate(r.endTime)}; // Luodaan poistonappi const deleteBtn = document.createElement("button"); deleteBtn.textContent = "X"; // haluan tähän svg-tiedoston deleteBtn.onclick = () => deleteReservation(r.id); li.appendChild(deleteBtn); list.appendChild(li); }); }
+```
+
+### AI:
+
+Koska SVG on jo tiedostona sovellushakemistossa, helpoin tapa on käyttää sitä <img>-elementtinä napin sisällä.
+
+Oletetaan, että SVG on esimerkiksi:
+```
+frontend/
+├── delete.svg
+```
+
+#### Muutos loadReservations()-funktioon
+Korvaa tämä rivi:
+```
+deleteBtn.textContent = "X";
+```
+näillä riveillä:
+```
+const icon = document.createElement("img");
+icon.src = "delete.svg";
+icon.alt = "Poista varaus";
+icon.className = "delete-icon";
+
+deleteBtn.appendChild(icon);
+```
+Koko nappiosuus näyttää tällöin tältä:
+```
+const deleteBtn = document.createElement("button");
+
+const icon = document.createElement("img");
+icon.src = "delete.svg";
+icon.alt = "Poista varaus";
+icon.className = "delete-icon";
+
+deleteBtn.appendChild(icon);
+deleteBtn.onclick = () => deleteReservation(r.id);
+
+li.appendChild(deleteBtn);
+```
+#### Miksi tämä toimii
+* SVG ladataan kuten tavallinen kuva
+* Nappi pysyy semanttisesti oikein (button)
+* Klikkaus toimii normaalisti
+* SVG:tä voi tyylitellä CSS:llä (.delete-icon)
+
+Tämä on täysin kelvollinen ja yleinen tapa käyttää SVG-ikonia painikkeessa.
+
+### Minä:
+
+*Miten saan delete-iconin käyttämään parent-elementtinsä (button) koko leveyden?*
+
+### AI:
+
+Aseta SVG-kuvalle leveys ja korkeus 100 %, ja määrittele koko buttonille.
+```
+button {
+  width: 32px;      /* tai haluamasi koko */
+  height: 32px;
+  padding: 0;
+}
+
+.delete-icon {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+```
+Tällöin .delete-icon täyttää koko parent-elementtinsä (button) leveyden ja korkeuden.
+
+### Minä:
+
+*Jostain syystä delete-icon (joka on buttonin sisällä) ei asetu pystysuunnassa keskelle, li-elementissä. Tässä on css-tiedostoni:*
+```
+body { font-family: Poppins; margin: auto; justify-items: center; background-color: #fbfbf6; } button { width: 100px; font-weight: bold; font-size: medium; color: #fbfbf6; background-color: rgb(44, 105, 210); padding: 5px; margin-top: 10px; border-radius: 50px; border: 1px solid rgb(120, 120, 120); } input, select { width: 250px; padding: 5px; border-radius: 5px; border: 1px solid rgb(203, 203, 203); } li { list-style-type: none; align-items: center; justify-content: center; align-content: center; } li button { height: 100%; width: 20px; background-color: transparent; padding: 0; } .delete-icon { width: 100%; height: 100%; display: block; } .reservation-form { display: flex; flex-direction: column; align-items: center; min-width: 100%; padding-bottom: 30px; background-color: #ffcaff; } .reservation-form input, select { margin-bottom: 10px; background-color: #fbfbf6; } .reservation-form p { margin: 0px; } .reservation-list { display: flex; flex-direction: column; align-items: center; } .reservation-list select { background-color: rgb(240, 240, 240); }
+```
+
+### AI:
+
+Syy on tässä:
+```
+li {
+  align-items: center;
+  justify-content: center;
+  align-content: center;
+}
+```
+👉 Nämä ominaisuudet eivät tee mitään, koska li ei ole flex- tai grid-container.
+Tällä hetkellä selain asettelee tekstin ja buttonin inline-tasauksella, jolloin nappi näyttää olevan “alhaalla”.
+
+#### Korjaus (yksi oikea rivi)
+Tee li:stä flex-container ja keskitys pystysuunnassa:
+```
+li {
+  list-style-type: none;
+  display: flex;
+  align-items: center;   /* pystysuuntainen keskitys */
+  justify-content: space-between;
+}
+```
+
+#### Miksi tämä ratkaisee ongelman
+* display: flex → tekstin ja buttonin asettelu samaan riviin
+* align-items: center → button (ja SVG sen sisällä) keskitetään pystysuunnassa tekstin kanssa
+* SVG täyttää buttonin → button täyttää flex-rivin korkeuden oikein
+
+### Minä:
+
+*Painike on nyt ok. Seuraavaksi haluan tehdä uuden customoidun alert-funktion, joka tulostuu ruudulle tarvittaessa ja poistuu esim 3 sekunnin kuluessa.*
+
+### AI:
+
+Hyvä ratkaisu 👍
+Tehdään oma, kevyt alert-komponentti ilman selaimen alert()-ikkunaa.
+
+Alla on yksinkertainen ja siisti toteutus, joka:
+* näyttää viestin ruudulla
+* katoaa automaattisesti 3 sekunnin kuluttua
+* tukee eri tyyppejä (success / error)
+
+#### 1️⃣ Lisää HTML:ään alert-container
+Lisää tämä esim. <body>-elementin alkuun tai loppuun:
+```
+<div id="alert-container"></div>
+```
+
+#### 2️⃣ Lisää CSS (esim. styles.css)
+```
+#alert-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.custom-alert {
+  background-color: rgb(44, 105, 210);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  font-weight: 500;
+  min-width: 200px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.custom-alert.error {
+  background-color: rgb(200, 60, 60);
+}
+
+.custom-alert.success {
+  background-color: rgb(60, 160, 90);
+}
+```
+
+#### 3️⃣ Lisää JavaScript-funktio (main.js)
+```
+function showAlert(message, type = "success", duration = 3000) {
+  const container = document.getElementById("alert-container");
+
+  const alert = document.createElement("div");
+  alert.className = `custom-alert ${type}`;
+  alert.textContent = message;
+
+  container.appendChild(alert);
+
+  setTimeout(() => {
+    alert.style.opacity = "0";
+    setTimeout(() => alert.remove(), 300);
+  }, duration);
+}
+```
+
+#### 4️⃣ Käyttöesimerkkejä
+```showAlert("Varaus luotu onnistuneesti", "success");
+
+showAlert("Varauksen poisto epäonnistui", "error");
+```
+
+#### 5️⃣ Miksi tämä on hyvä ratkaisu
+✔ Ei estä käyttöä (toisin kuin alert())
+
+✔ Ulkoasu täysin hallittavissa
+
+✔ Helppo käyttää kaikkialla frontendissä
+
+✔ Laajennettavissa (ikonit, animaatiot, close-nappi)
+
+### Minä:
+
+*Minulla on ikonit valmiina (svg) hakemistossa ja haluan lisätä ne vielä alert-komponentteihin ennen tekstiä.*
+
+### AI:
+
+Tämä onnistuu samalla periaatteella kuin delete-napissa: lisätään SVG <img>-elementtinä alertin sisään ennen tekstiä.
+
+Oletetaan rakenne:
+```
+frontend/
+├── icons/
+│   ├── success.svg
+│   └── error.svg
+```
+
+#### Muokattu showAlert-funktio
+```
+function showAlert(message, type = "success", duration = 3000) {
+  const container = document.getElementById("alert-container");
+
+  const alert = document.createElement("div");
+  alert.className = `custom-alert ${type}`;
+
+  // Ikoni
+  const icon = document.createElement("img");
+  icon.className = "alert-icon";
+  icon.src = type === "error" ? "icons/error.svg" : "icons/success.svg";
+  icon.alt = type;
+
+  // Teksti
+  const text = document.createElement("span");
+  text.textContent = message;
+
+  alert.appendChild(icon);
+  alert.appendChild(text);
+  container.appendChild(alert);
+
+  setTimeout(() => {
+    alert.style.opacity = "0";
+    setTimeout(() => alert.remove(), 300);
+  }, duration);
+}
+```
+
+#### CSS ikonille ja asettelulle
+```
+.custom-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.alert-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+```
+
+#### Lopputulos
+
+* SVG-ikoni näkyy tekstin vasemmalla puolella
+* Ikoni on pystysuunnassa keskellä
+* Sama komponentti tukee eri tiloja (success, error)
+* Ikonit ovat helposti vaihdettavissa
+* Tämä on selkeä, kevyt ja täysin hallittu ratkaisu.
