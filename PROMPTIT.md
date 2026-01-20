@@ -1448,3 +1448,370 @@ Normaalit varaukset toimivat edelleen.
 Jos haluat, voimme päivittää myös Jest-testit niin, että ne testavat nämä uudet validoinnit automaattisesti.
 
 Haluatko, että teen sen?
+
+## Välihuomatus
+
+Tässä vaiheessa tein alustavan commitin Git-repositoriooni ja siirryin tehtävässä vaiheeseen 2. Halusin kuitenkin pitää tekoälyn mukana kehitystyössä tästäkin eteenpäin. Päivittelen sille aina ajoittain työvaiheitani ja päivityksiäni. Konsultoin myös ajoittain ongelmakohdissa tai muuten nopeuttaakseni tiettyjä työvaiheita.
+
+### Minä:
+
+*Päivitin projektin kansiorakenteen seuraavasti. Hakemiston juuressa jaetaan kahteen sovelluksen kansiot kahteen pääkansioon: frontend ja backend. Frontendiin UI:n tiedostot index.html, main.js, styles.css. Loput kansiot luonnollisesti backend-kansioon."
+
+### AI:
+
+Hyvä ratkaisu 👍
+Tuo jako frontend / backend on erittäin selkeä ja vastaa oikeaa tuotantimallia. Käydään läpi:
+
+1. Miltä lopullinen kansiorakenne näyttää
+
+2. Mitä pieniä muutoksia backendissä tarvitaan
+
+3. Miten sovellus käynnistetään ja avataan selaimessa
+
+#### 1️⃣ Uusi kansiorakenne (selkeä ja looginen)
+```
+project/
+├── backend/
+│   ├── src/
+│   │   ├── app.js
+│   │   ├── server.js
+│   │   │
+│   │   ├── routes/
+│   │   │   └── reservations.js
+│   │   │
+│   │   ├── controllers/
+│   │   │   └── reservationsController.js
+│   │   │
+│   │   ├── services/
+│   │   │   └── reservationService.js
+│   │   │
+│   │   ├── data/
+│   │   │   └── inMemoryDb.js
+│   │   │
+│   │   └── utils/
+│   │       └── timeUtils.js
+│   │
+│   └── package.json
+│
+├── frontend/
+│   ├── index.html
+│   ├── main.js
+│   └── styles.css
+│
+└── README.md
+```
+✔ Backend ja frontend eriytetty
+
+✔ Helppo ymmärtää ja dokumentoida
+
+✔ Vastaa monen oikean projektin rakennetta
+
+#### 2️⃣ Backend: staattisten tiedostojen tarjoaminen frontend-kansiosta
+Koska frontend on nyt eri pääkansiossa, Expressille pitää kertoa uusi polku.
+
+backend/src/app.js
+```
+const express = require("express");
+const path = require("path");
+const reservationRoutes = require("./routes/reservations");
+
+const app = express();
+
+app.use(express.json());
+
+// 👉 Frontend sijaitsee nyt backendin ulkopuolella
+app.use(express.static(
+  path.join(__dirname, "../../frontend")
+));
+
+// API
+app.use("/api/reservations", reservationRoutes);
+
+module.exports = app;
+```
+
+#### 3️⃣ Backendin käynnistys
+Siirry backend-kansioon:
+```
+cd backend
+node src/server.js
+```
+Palvelin käynnistyy esim.:
+```
+Server käynnissä portissa 3000
+```
+
+#### 4️⃣ Sovelluksen avaaminen selaimessa (tärkeää!)
+⚠️ ÄLÄ avaa frontend/index.html suoraan selaimessa
+⚠️ ÄLÄ käytä Live Serveriä
+
+✅ Avaa aina:
+```
+http://localhost:3000
+```
+Silloin:
+*Express tarjoaa frontendin
+*fetch("/api/reservations") osuu oikeaan backend-palvelimeen
+*Ei CORS-ongelmia
+*POST / DELETE toimivat oikein
+
+#### 5️⃣ Frontend: ei muutoksia fetch-kutsuihin
+frontend/main.js saa pysyä tällaisena:
+```
+fetch("/api/reservations", { ... })
+```
+Koska:
+*frontend ja backend tulevat samasta originista
+*selain lisää automaattisesti localhost:3000
+
+#### 6️⃣ Miksi tämä rakenne on erinomainen
+✅ Backend voidaan myöhemmin ajaa erikseen (Docker, pilvi)
+
+✅ Frontend voidaan myöhemmin korvata React/Vue-sovelluksella
+
+✅ API on selkeästi rajattu /api/*
+
+✅ Sopii hyvin koulutehtävään ja oikeaan projektiin
+
+### Minä:
+
+*Testien tulisi toimia ilman serverin käynnistämistä, eikö?*
+
+### AI:
+
+Kyllä – täysin oikein ✅
+Tämä on tärkeä periaate, ja teidän toteutus toimii juuri niin kuin pitääkin.
+
+#### Miksi testien EI tarvitse käynnistää serveriä
+Te käytätte testauksessa tätä riviä:
+```
+const app = require("../src/app");
+```
+Ja testejä:
+```request(app)
+  .post("/api/reservations")
+```
+##### Mitä tässä tapahtuu?
+* app on Express-sovellusolio
+* Supertest osaa:
+  * käynnistää sovelluksen sisäisesti
+  * tehdä HTTP-pyynnöt ilman app.listen()
+* server.js ei ole mukana testeissä ollenkaan
+
+👉 Tämä on oikea ja suositeltu tapa testata Express-APIa.
+
+#### Miksi server.js pitää olla erillinen
+```
+src/
+├── app.js     ← testattava
+└── server.js  ← käynnistää palvelimen
+```
+* app.js
+  * konfiguroi reitit ja middlewaret
+  * ei kuuntele porttia
+* server.js
+  * kutsuu app.listen(...)
+  * vain tuotanto-/kehityskäyttöön
+
+Jos listen() olisi app.js:ssä:
+* testit yrittäisivät käynnistää palvelimen
+* portti voisi olla jo varattu
+* testit muuttuisivat epäluotettaviksi
+
+#### Mitä tapahtuisi, jos server käynnistettäisiin testissä?
+❌ Portti voi olla varattu
+
+❌ Testit eivät ole rinnakkaistettavia
+
+❌ Testit ovat hitaita
+
+❌ CI/CD rikkoontuu
+
+#### Oikea malli (teillä käytössä)
+```
+// app.js
+const app = express();
+module.exports = app;
+
+// server.js
+const app = require("./app");
+app.listen(3000);
+
+// reservations.test.js
+const app = require("../src/app");
+request(app).get("/api/reservations/...");
+```
+✔ Täydellinen rakenne
+
+✔ Testit toimivat ilman serverin käynnistämistä
+
+✔ Vastaa Express + Jest -best practicea
+
+### Minä:
+
+*Yritän ajaa testit /backend-kansiossa, mutta kaikki testit epäonnistuvat (paitsi DELETE /api/reservations/:id - epäonnistuu, jos varaus ei ole olemassa.) Luulen, että testit eivät saa yhteyttä serveriin oikein tällä hetkellä.*
+
+### AI:
+
+Tämä on erittäin hyvä havainto – ja vaistosi on melkein oikea, mutta tarkennetaan:
+testit eivät oikeasti “ota yhteyttä serveriin” lainkaan, ja juuri siksi ongelma on todennäköisesti Express-sovelluksen konfiguraatiossa (app.js) eikä testien ajamisessa.
+
+Puretaan tämä rauhassa ja loogisesti.
+
+#### 1️⃣ Varmistetaan ensin perusasia (tärkein)
+Testit eivät käytä käynnissä olevaa serveriä
+Supertest tekee tämän:
+```
+request(app).post("/api/reservations")
+```
+❌ Ei käytä localhost
+
+❌ Ei käytä porttia
+
+❌ Ei tarvitse app.listen()
+
+✅ Kutsuu Express-sovellusta suoraan muistissa
+
+👉 Jos testit epäonnistuvat, syy on lähes aina:
+* reitti ei ole rekisteröity
+* middleware estää pyynnön
+* app.js ei ole oikein rakennettu
+
+#### 2️⃣ Yleisin syy juuri tähän oireeseen (95 % tapauksista)
+❗ app.js ei exportoi oikein Express-appia
+
+tai
+
+❗ reitit eivät ole rekisteröity oikein
+
+Oikea app.js (vertaa tähän)
+```
+const express = require("express");
+const path = require("path");
+const reservationRoutes = require("./routes/reservations");
+
+const app = express();
+
+app.use(express.json());
+
+// API REITIT – TÄRKEÄÄ
+app.use("/api/reservations", reservationRoutes);
+
+// (frontendin static ei vaikuta testaukseen)
+app.use(express.static(
+  path.join(__dirname, "../../frontend")
+));
+
+module.exports = app;
+```
+🔴 Jos jokin näistä puuttuu tai on väärässä järjestyksessä, testit kaatuvat.
+
+#### 3️⃣ Erittäin tärkeä tarkistus: reservations.js
+Varmista että reitit todella vastaavat testejä
+
+📄 backend/src/routes/reservations.js
+```
+const express = require("express");
+const router = express.Router();
+const controller = require("../controllers/reservationsController");
+
+router.post("/", controller.createReservation);
+router.get("/:room", controller.getReservationsByRoom);
+router.delete("/:id", controller.deleteReservation);
+
+module.exports = router;
+```
+Jos esim.:
+* router.post("/reservations", ...) ❌
+* tai puuttuu / ❌
+
+→ testit eivät löydä reittiä
+
+#### 4️⃣ Miksi juuri tämä testi menee läpi?
+DELETE /api/reservations/:id – epäonnistuu, jos varaus ei ole olemassa
+
+Tämä tarkoittaa:
+
+✅ DELETE-reitti on olemassa
+
+✅ Controller vastaa oikein
+
+✅ Express toimii
+
+Mutta:
+
+❌ POST ei toimi
+
+❌ GET ei toimi
+
+➡️ Tämä viittaa siihen, että:
+
+* POST epäonnistuu ennen kuin data tallennetaan
+* GET ei löydä dataa, koska sitä ei koskaan luotu
+
+#### 5️⃣ Todennäköisin varsinainen syy: validointi rikkoo testit
+Lisäsit validoinnin:
+```
+if (start < now) {
+  throw new Error("Varauksen aloitusaika ei voi olla menneessä");
+}
+```
+Testidata:
+```
+startTime: "2099-01-01T10:00"
+```
+⚠️ Node tulkitsee tämän UTC-aikana, ja jos vertailu tehdään väärin, se voi silti epäonnistua joissain ympäristöissä.
+
+Korjaa testidata varmaksi
+```
+const futureStart = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+const futureEnd = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+```
+Ja testissä:
+```
+.send({
+  room: "Testihuone",
+  startTime: futureStart,
+  endTime: futureEnd
+});
+```
+👉 Tämä poistaa kaikki aikavyöhykeongelmat.
+
+#### 6️⃣ Lopullinen johtopäätös
+❌ Ongelma ei ole “yhteys serveriin”
+
+❌ Ongelma ei ole frontend/backend-jaossa
+
+✅ Ongelma on Express-appin konfiguraatiossa tai validoinnissa
+
+✅ DELETE-testin osittainen toiminta todistaa, että perusrakenne on oikein
+
+### Minä:
+
+*Vastaa vain tähän kysymykseen, ei tarvitse lisätä muuta: startTime: "miten lisään manuaalisesti menneen ajan tähän?", kun luon uutta post-pyyntöä automaatiotestissä?*
+
+### AI:
+
+Lisäämällä ISO-aikaleiman, joka on selvästi menneisyydessä, esimerkiksi:
+```
+startTime: "2000-01-01T10:00:00.000Z"
+```
+Tai dynaamisesti testissä:
+```
+const pastTime = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+
+startTime: pastTime
+```
+Molemmat luovat varmasti menneeseen aikaan sijoittuvan varauksen.
+
+### Minä:
+
+*Päivitin käyttöliittymää index.html. Ei tarvitse ehdottaa mitään:*
+```
+<!DOCTYPE html> <html lang="fi"> <head> <meta charset="UTF-8" /> <title>Varaussovellus</title> <link href='https://fonts.googleapis.com/css?family=Poppins' rel='stylesheet'> <link rel="stylesheet" href="styles.css" /> </head> <body> <div class="reservation-form"> <h1>Varaa kokoustila</h1> <input id="start" type="datetime-local" /> <input id="end" type="datetime-local" /> <p>Valitse tila:</p> <select id="room"> <option value="Kokoustila A">Kokoustila A</option> <option value="Kokoustila B">Kokoustila B</option> <option value="Kokoustila C">Kokoustila C</option> </select> <button id="createBtn">Varaa</button> </div> <div class="reservation-list"> <h2>Hae tietyn huoneen varauksia</h2> <select id="searchRoom"> <option value="Kokoustila A">Kokoustila A</option> <option value="Kokoustila B">Kokoustila B</option> <option value="Kokoustila C">Kokoustila C</option> </select> <button id="searchBtn">Hae</button> <ul id="reservations"></ul> </div> <script src="main.js"></script> </body> </html>
+```
+
+### AI:
+
+Selvä 👍
+Päivitys vastaanotettu ja ymmärretty.
