@@ -2116,3 +2116,278 @@ Tuotannossa edelleen:
 npm start
 ```
 Tämä on oikea ja yleinen tapa käyttää nodemonia Node.js-projekteissa.
+
+### Minä:
+
+*Seuraavaksi luon customoidun funkiton confirm-notifikaatiolle käyttöliittymään. Sitä käytetään varauksen poiston yhteydessä. Komponentti tarvitsee ikonin, tekstin ja painikkeet poiston hyväksymiselle ja peruuttamiselle. Lisäsin domiin:*
+```
+<div id="confirm-container"></div> Tässä pohja funktiolle: function showConfirm(message) { // Haetaan DOM:sta oikea div-komponentti const container = document.getElementById("confirm-container"); // Luodaan sisällölle komponentti ja class const confirm = document.createElement("div"); confirm.className = "custom-confirm"; // Confirm ilmoituksen ikoni const icon = document.createElement("img"); icon.className = "confirm-icon"; icon.src = type === "error" ? "./assets/circle-question-solid-full.svg" : "./assets/circle-question-solid-full.svg"; icon.alt = type; // Confirm ilmoituksen teksti const text = document.createElement("span"); text.textContent = message; // Confirm viestin submit-painike // Confirm viestin peruutus-painike }
+```
+
+### AI:
+
+Hyvä pohja 👍
+
+Alla on täysin valmis ja toimiva showConfirm-funktio, joka:
+* näyttää ikonillisen confirm-komponentin
+* sisältää Hyväksy- ja Peruuta-painikkeet
+* palauttaa käyttäjän valinnan Promise<boolean>-arvona
+* on helppo käyttää varauksen poiston yhteydessä
+
+#### Valmis showConfirm-funktio (main.js)
+```
+function showConfirm(message) {
+  return new Promise((resolve) => {
+    const container = document.getElementById("confirm-container");
+    container.innerHTML = "";
+
+    const confirm = document.createElement("div");
+    confirm.className = "custom-confirm";
+
+    // Ikoni
+    const icon = document.createElement("img");
+    icon.className = "confirm-icon";
+    icon.src = "./assets/circle-question-solid-full.svg";
+    icon.alt = "Vahvistus";
+
+    // Teksti
+    const text = document.createElement("span");
+    text.textContent = message;
+
+    // Painikkeet
+    const buttons = document.createElement("div");
+    buttons.className = "confirm-buttons";
+
+    const okBtn = document.createElement("button");
+    okBtn.textContent = "Poista";
+    okBtn.className = "confirm-ok";
+
+    const cancelBtn = document.createElement("button");
+    cancelBtn.textContent = "Peruuta";
+    cancelBtn.className = "confirm-cancel";
+
+    okBtn.onclick = () => {
+      container.innerHTML = "";
+      resolve(true);
+    };
+
+    cancelBtn.onclick = () => {
+      container.innerHTML = "";
+      resolve(false);
+    };
+
+    buttons.appendChild(okBtn);
+    buttons.appendChild(cancelBtn);
+
+    confirm.appendChild(icon);
+    confirm.appendChild(text);
+    confirm.appendChild(buttons);
+
+    container.appendChild(confirm);
+  });
+}
+```
+
+#### Käyttö varauksen poiston yhteydessä
+```
+async function deleteReservation(id) {
+  const confirmed = await showConfirm("Haluatko varmasti poistaa varauksen?");
+
+  if (!confirmed) return;
+
+  await fetch(`/api/reservations/${id}`, { method: "DELETE" });
+  loadReservations();
+}
+```
+
+#### Miksi Promise-pohjainen confirm on paras
+✔ Käyttö kuin natiivi confirm()
+
+✔ Ei callback-helvettiä
+
+✔ Helppo ketjuttaa async/awaitiin
+
+✔ Täysin tyyliteltävissä ja laajennettavissa
+
+### Minä:
+
+*Käytetään mieluummin tässä id-arvoja: okBtn.className = "confirm-ok"; Ei tarvitse tehdä mitään.*
+
+### AI:
+
+Selvä 👍
+Vaihdetaan painikkeille id-arvot classien sijaan. Muu logiikka pysyy samana.
+
+### Minä:
+
+*Päivitin funktion tähän. Älä tee mitään:*
+```
+function showConfirm(message) { return new Promise((resolve) => { // Haetaan DOM:sta oikea div-komponentti (käytetään samaa alert-komponenttia pohjana) const container = document.getElementById("alert-container"); container.innerHTML = ""; // Luodaan koko sisällölle oma komponentti ja class const confirm = document.createElement("div"); confirm.className = "custom-confirm"; // Luodaan ikonille ja tekstille oma div (layoutissa ylin rivi) const content = document.createElement("div"); content.className = "confirm-content" // Confirm ilmoituksen ikoni (käytetään alert-ikonin tyylittelyä) const icon = document.createElement("img"); icon.className = "alert-icon"; icon.src = "./assets/circle-question-solid-full.svg"; icon.alt = "Vahvistus"; // Confirm ilmoituksen teksti const text = document.createElement("span"); text.textContent = message; // Confirm viestin painikkeille oma div (layoutissa alin rivi) const buttons = document.createElement("div"); buttons.className = "confirm-buttons"; // Painike poiston vahvistukselle const okBtn = document.createElement("button"); okBtn.textContent = "Vahvista"; okBtn.id = "confirm-ok"; // Painike poiston peruuttamiselle const cancelBtn = document.createElement("button"); cancelBtn.textContent = "Peruuta"; cancelBtn.id = "confirm-cancel"; // Tapahtuman käsittely vahvistuspainikkeelle okBtn.onclick = () => { container.innerHTML = ""; resolve(true); }; // Tapahtuman käsittely peruutuspainikkeelle cancelBtn.onclick = () => { container.innerHTML = ""; resolve(false); }; // Asetellaan komponentit parentteihinsa content.appendChild(icon); content.appendChild(text); buttons.appendChild(okBtn); buttons.appendChild(cancelBtn); confirm.appendChild(content); confirm.appendChild(buttons); container.appendChild(confirm); }) }
+```
+
+### AI:
+
+Selvä 👍
+
+### Minä: 
+
+*Tässä tulee domin tyylittely. Ikoni ja teksti eivät asetu pystysuunnassa keskelle parent-containerissaan:*
+```
+#alert-container { position: fixed; left: 50%; transform: translate(-50%, 0%); z-index: 1000; margin-top: 5px; } .custom-confirm { display: flex; flex-direction: column; gap: 10px; align-items: center; color: rgb(36, 36, 36); padding: 20px; border-radius: 5px; box-shadow: 0.5px 0.5px rgb(36, 36, 36); font-weight: 500; transition: opacity 0.1s ease; background-color: #f9edcd; border: 3px solid #f2bb32; } .confirm-content { gap: 10px; margin: auto; align-items: center; }
+```
+
+### AI:
+
+Syy on sama kuin aiemmin li-elementin kanssa:
+.confirm-content ei ole flex-container, joten align-items ei vaikuta mihinkään.
+
+Lisää siihen display: flex.
+
+#### Korjaus
+```
+.confirm-content {
+  display: flex;
+  align-items: center;   /* pystysuuntainen keskitys */
+  gap: 10px;
+  margin: auto;
+}
+```
+
+#### Miksi tämä toimii
+* display: flex aktivoi flexbox-asettelun
+* align-items: center keskittää ikonin ja tekstin pystysuunnassa toisiinsa nähden
+* gap hoitaa välin ilman marginaalihackeja
+
+Tämän jälkeen ikoni ja teksti asettuvat oikein keskelle parent-containerissaan.
+
+### Minä:
+
+*Siistin hieman /frontend sisältöä. Siirrän main.js omaan kansioon /frontend/hooks ja lisään hooks-kansioon uuden tiedoston notification.js. Notification.js-tiedoston sisälle siirrän uudet funktiot showAlert() ja showConfirm().*
+
+### AI:
+
+Hyvä ja järkevä refaktorointi 👍
+Kun siirrät logiikkaa omiin tiedostoihin, tarvitset vain kolme asiaa kuntoon:
+
+#### 1️⃣ Uusi frontend-rakenne
+```
+frontend/
+├── index.html
+├── styles.css
+├── hooks/
+│   ├── main.js
+│   └── notification.js
+└── assets/
+    └── *.svg
+```
+
+#### 2️⃣ notification.js: exporttaa funktiot
+```
+export function showAlert(message, type = "success", duration = 3000) {
+  const container = document.getElementById("alert-container");
+
+  const alert = document.createElement("div");
+  alert.className = `custom-alert ${type}`;
+  alert.textContent = message;
+
+  container.appendChild(alert);
+
+  setTimeout(() => {
+    alert.style.opacity = "0";
+    setTimeout(() => alert.remove(), 300);
+  }, duration);
+}
+
+export function showConfirm(message) {
+  return new Promise((resolve) => {
+    const container = document.getElementById("alert-container");
+    container.innerHTML = "";
+
+    const confirm = document.createElement("div");
+    confirm.className = "custom-confirm";
+
+    const content = document.createElement("div");
+    content.className = "confirm-content";
+
+    const icon = document.createElement("img");
+    icon.className = "alert-icon";
+    icon.src = "./assets/circle-question-solid-full.svg";
+
+    const text = document.createElement("span");
+    text.textContent = message;
+
+    const buttons = document.createElement("div");
+    buttons.className = "confirm-buttons";
+
+    const okBtn = document.createElement("button");
+    okBtn.id = "confirm-ok";
+    okBtn.textContent = "Vahvista";
+
+    const cancelBtn = document.createElement("button");
+    cancelBtn.id = "confirm-cancel";
+    cancelBtn.textContent = "Peruuta";
+
+    okBtn.onclick = () => {
+      container.innerHTML = "";
+      resolve(true);
+    };
+
+    cancelBtn.onclick = () => {
+      container.innerHTML = "";
+      resolve(false);
+    };
+
+    content.appendChild(icon);
+    content.appendChild(text);
+    buttons.appendChild(okBtn);
+    buttons.appendChild(cancelBtn);
+    confirm.appendChild(content);
+    confirm.appendChild(buttons);
+    container.appendChild(confirm);
+  });
+}
+```
+
+#### 3️⃣ main.js: tuo funktiot käyttöön
+```
+import { showAlert, showConfirm } from "./notification.js";
+```
+Ja käytä normaalisti:
+```
+showAlert("Varaus luotu onnistuneesti");
+
+const confirmed = await showConfirm("Haluatko varmasti poistaa varauksen?");
+```
+
+#### 4️⃣ TÄRKEÄ: index.html → module-skripti
+Koska käytät ES moduleita (import/export), muuta script-tagi:
+```
+<script type="module" src="./hooks/main.js"></script>
+```
+⚠️ Ilman type="module" importit eivät toimi.
+
+#### 5️⃣ Yleisin sudenkuoppa (tiedostopolut)
+Koska notification.js on hooks/-kansiossa, ikonipolku:
+```
+icon.src = "./assets/..."
+```
+toimii vain jos:
+* sivu ladataan projektin juuresta
+* Express tarjoilee frontendin juuren oikein
+
+Jos ongelmia ilmenee, oikea polku on usein:
+```
+icon.src = "../assets/circle-question-solid-full.svg";
+```
+(riippuu siitä, mistä tiedostosta suhteellinen polku lasketaan)
+
+#### Lopputulos
+✔ Frontend on nyt modulaarinen
+
+✔ Notification-logiikka eriytetty
+
+✔ main.js pysyy selkeämpänä
+
+✔ Rakenne skaalautuu hyvin
+
+Tämä on hyvin tehty frontend-refaktorointi.
