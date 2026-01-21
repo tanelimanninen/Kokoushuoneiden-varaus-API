@@ -1,3 +1,4 @@
+/* Koko sivun sisältö */
 body {
   font-family: Poppins;
   margin: auto;
@@ -5,6 +6,7 @@ body {
   background-color: #fbfbf6;
 }
 
+/* Globaalit tyylit */
 button {
   width: 100px;
   font-weight: bold;
@@ -34,6 +36,7 @@ li {
   justify-content: space-between;
 }
 
+/* Lista-elementin poistopainike */
 li button {
   height: 100%;
   width: 20px;
@@ -47,6 +50,7 @@ li button:hover {
   background-color: transparent;
 }
 
+/* Poistopainikkeen ikoni */
 .delete-icon {
   width: 100%;
   height: 100%;
@@ -57,6 +61,7 @@ li button:hover {
   background-color: rgb(120, 120, 120);
 }
 
+/* Varauksen lomake */
 .reservation-form {
   display: flex;
   flex-direction: column;
@@ -67,25 +72,30 @@ li button:hover {
   border-bottom: 0.5px solid rgb(120, 120, 120);
 }
 
+/* Varauslomake, syöttö/dropdown-valinta -kentät */
 .reservation-form input, select {
   margin-bottom: 10px;
   background-color: #fbfbf6;
 }
 
+/* Varauslomake, tekstielementit */
 .reservation-form p {
   margin: 0px;
 }
 
+/* Varausten listakomponentti */
 .reservation-list {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
+/* Varausten listakomponentti, valintakenttä */
 .reservation-list select {
   background-color: rgb(240, 240, 240);
 }
 
+/* Notifikaation pohjakomponentti */
 #alert-container {
   position: fixed;
   left: 50%;
@@ -94,6 +104,7 @@ li button:hover {
   margin-top: 5px;
 }
 
+/* Notifikaation komponentti (success/error) */
 .custom-alert {
   display: flex;
   gap: 10px;
@@ -107,22 +118,26 @@ li button:hover {
   transition: opacity 0.1s ease;
 }
 
+/* Notifikaation virhekomponentti */
 .custom-alert.error {
   background-color: #eb7062;
   border: 3px solid #e22f1a;
 }
 
+/* Notifikaation onnistumiskomponentti */
 .custom-alert.success {
   background-color: #8a9c8c;
   border: 3px solid #388641;
 }
 
+/* Notifikaation komponentti, ikoni */
 .alert-icon {
   width: 30px;
   height: 30px;
   flex-shrink: 0;
 }
 
+/* Notifikaation komponentti (varmistusviesti) */
 .custom-confirm {
   display: flex;
   flex-direction: column;
@@ -138,12 +153,14 @@ li button:hover {
   border: 3px solid #f2bb32;
 }
 
+/* Notifikaation komponentti (varmistusviesti), sisältökomponentti (ylempi) */
 .confirm-content {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
+/* Notifikaation komponentti (varmistusviesti), painikekomponentti (alempi) */
 .confirm-buttons {
   display: flex;
   align-items: center;
