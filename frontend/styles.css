@@ -122,3 +122,30 @@ li button:hover {
   height: 30px;
   flex-shrink: 0;
 }
+
+.custom-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: center;
+  color: rgb(36, 36, 36);
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0.5px 0.5px rgb(36, 36, 36);
+  font-weight: 500;
+  transition: opacity 0.1s ease;
+  background-color: #f9edcd;
+  border: 3px solid #f2bb32;
+}
+
+.confirm-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.confirm-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
