@@ -36,8 +36,17 @@ exports.deleteReservation = (req, res) => {
 
 /* Luodaan GET-pyyntö osoitteeseen /api/reservations/:room */
 exports.getReservationsByRoom = (req, res) => {
-  // Kutsutaan sevice-funktiota
-  const reservations = service.getReservationsByRoom(req.params.room);
-  // Palautetaan varaukset JSON-muodossa
-  res.json(reservations);
+  try {
+    // Kutsutaan sevice-funktiota
+    const reservations = service.getReservationsByRoom(req.params.room);
+    // Tulostetaan terminaaliin
+    console.log(`[GET] - Varausten haku onnistui: /api/reservations/${req.params.room}`);
+    // Palautetaan varaukset JSON-muodossa
+    res.json(reservations);
+  } catch (err) {
+    // Tulostetaan terminaaliin
+    console.error(`[GET] - Varausten haku epäonnistui: /api/reservations/${req.params.room}`, err.message);
+    // Palautetaan status-koodilla 500 (Internal Server Error) ja virheilmoitus
+    res.status(500).json({ error: err.message });
+  }
 };
