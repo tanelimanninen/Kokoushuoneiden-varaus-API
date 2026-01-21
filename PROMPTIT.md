@@ -2391,3 +2391,164 @@ icon.src = "../assets/circle-question-solid-full.svg";
 ✔ Rakenne skaalautuu hyvin
 
 Tämä on hyvin tehty frontend-refaktorointi.
+
+### Minä:
+
+*notification.js lopusta unohtui exporttaus*
+
+### AI:
+
+Aivan oikein 👍
+Jos funktiot on määritelty ilman export-avainsanaa, ne eivät ole käytettävissä main.js:ssä.
+
+#### Kaksi oikeaa tapaa korjata tämä
+✅ Vaihtoehto 1 (suositeltu): export suoraan funktioissa
+```
+export function showAlert(message, type = "success", duration = 3000) {
+  ...
+}
+
+export function showConfirm(message) {
+  ...
+}
+```
+
+#### ✅ Vaihtoehto 2: export lopussa
+```
+function showAlert(message, type = "success", duration = 3000) {
+  ...
+}
+
+function showConfirm(message) {
+  ...
+}
+
+export { showAlert, showConfirm };
+```
+Molemmat ovat täysin oikein — valitse tyyli, jota haluat käyttää projektissa.
+
+### Minä:
+
+*Huomasin seuraavaa. Käyttöliittymän createReservation()-funktion sisällä luodaan reservation-muuttuja, jota ei koskaan käytetä:*
+```
+// Varauksen luomisen käsittely käyttöliittymässä async function createReservation() { // Haetaan DOM:ista lomakkeen syöttöarvot const room = document.getElementById("room").value; const startTime = document.getElementById("start").value; const endTime = document.getElementById("end").value; // Jos syöttöarvo on tyhjä if (!room || !startTime || !endTime) { showAlert("Täytä kaikki kentät", "error"); return; } try { // Lähetetään POST-pyyntö palvelimelle const response = await fetch("/api/reservations", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ room, startTime, endTime }) }); // Jos pyyntö epäonnistuu if (!response.ok) { // Varmistetaan, että vastaus sisältää JSONia try { const err = await response.json(); if (err.error) errMsg = err.error; } catch { // Ei JSONia → käytetään oletusvirhettä } showAlert("Varaus epäonnistui", "error"); return; } const reservation = await response.json(); showAlert("Varaus luotu", "success"); loadReservations(); } catch (err) { showAlert("Palvelinvirhe: ", err.message); } }
+```
+
+### AI:
+
+Hyvä havainto – olet täysin oikeassa 👍
+
+Tässä funktiossa:
+```
+const reservation = await response.json();
+```
+reservation-muuttujaa ei käytetä mihinkään, joten se on tällä hetkellä turha.
+
+#### Miksi se on usein jäänyt tähän?
+* Alun perin varauksen ID:tä tai tietoja on ehkä tarkoitus käyttää
+* Tyypillinen malli: “luo → palauta JSON → käytä dataa”
+* Mutta nykyisessä UI:ssa:
+  * näytät vain alertin
+  * lataat varaukset uudelleen loadReservations()illa
+
+#### Kaksi järkevää vaihtoehtoa
+
+##### ✅ Vaihtoehto 1: Poista muuttuja kokonaan (siistein nyt)
+Jos et tarvitse backendin vastausta:
+```
+await response.json(); // tai ei edes tätä, jos backend palauttaa 201 ilman bodya
+showAlert("Varaus luotu", "success");
+loadReservations();
+```
+Tai jopa:
+```
+showAlert("Varaus luotu", "success");
+loadReservations();
+```
+
+##### ✅ Vaihtoehto 2: Hyödynnä reservation-dataa
+Jos haluat myöhemmin:
+* näyttää varauksen ajan alertissa
+* lisätä varauksen listaan ilman uutta GET-pyyntöä
+* logata ID:n
+
+esim.:
+```
+const reservation = await response.json();
+showAlert(`Varaus luotu (${reservation.id})`, "success");
+```
+
+#### Suositus
+
+Tässä vaiheessa projektia vaihtoehto 1 on paras:
+* vähemmän turhaa koodia
+* selkeämpi logiikka
+* ei “kuollutta muuttujaa”
+
+Tämä oli hyvä koodikatselmushavainto – juuri tällaisia asioita huomataan oikeassa kehitystyössä 👌
+
+### Minä:
+
+*Selitä vielä, mitä await response.json(); käytännössä tekee?*
+
+### AI:
+
+await response.json(); tekee kaksi asiaa peräkkäin:
+
+#### 1️⃣ Lukee HTTP-vastauksen rungon
+
+Kun teet fetch-pyynnön, palvelin vastaa esim.:
+```
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+{
+  "id": 5,
+  "room": "Kokoustila A",
+  "startTime": "...",
+  "endTime": "..."
+}
+```
+response.json():
+* lukee vastauksen body-datan
+* olettaa sen olevan JSON-muotoista
+
+#### 2️⃣ Parsii JSON-tekstin JavaScript-olioksi
+```
+await response.json();
+```
+* muuntaa JSON-merkkijonon JS-olioksi
+* palauttaa esim.:
+```
+{
+  id: 5,
+  room: "Kokoustila A",
+  startTime: "...",
+  endTime: "..."
+}
+```
+await:
+* pysäyttää funktion suorituksen hetkeksi
+* jatkaa vasta, kun JSON on luettu ja parsittu
+
+#### Tärkeä yksityiskohta
+
+HTTP-vastauksen body voidaan lukea vain kerran.
+
+Tämä on OK:
+```
+const data = await response.json();
+```
+Tämä EI ole:
+```
+await response.json();
+await response.json(); // ❌ body jo käytetty
+```
+
+#### Miksi sitä käytetään, vaikka dataa ei käytetä?
+Joskus:
+* halutaan varmistaa, että vastaus on oikeasti luettavissa
+* halutaan kuluttaa body ennen jatkoa
+* tai koodi on jäänyt aiemmasta versiosta
+
+Mutta jos et käytä dataa, sitä ei ole pakko kutsua.
