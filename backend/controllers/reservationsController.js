@@ -5,9 +5,13 @@ exports.createReservation = (req, res) => {
   try {
     // Kutsutaan sevice-funktiota
     const reservation = service.createReservation(req.body);
+    // Tulostetaan terminaaliin
+    console.log(`[POST] - Varauksen luonti onnistui, id: ${reservation.id}`);
     // Palautetaan varaus status-koodilla 201 (created)
     res.status(201).json(reservation);
   } catch (err) {
+    // Tulostetaan terminaaliin
+    console.error(`[POST] - Varauksen luonti epäonnistui:`, err.message);
     // Palautetaan status-koodilla 400 (bad request) ja virheilmoitus
     res.status(400).json({ error: err.message });
   }
@@ -18,9 +22,13 @@ exports.deleteReservation = (req, res) => {
   try {
     // Kutsutaan sevice-funktiota
     service.deleteReservation(Number(req.params.id));
+    // Tulostetaan terminaaliin
+    console.log(`[DELETE] - Varauksen poisto onnistui, id: ${req.params.id}`);
     // Palautetaan varaus status-koodilla 204 (no content)
     res.status(204).send();
   } catch (err) {
+    // Tulostetaan terminaaliin
+    console.error(`[DELETE] - Varauksen luonti epäonnistui:`, err.message);
     // Palautetaan status-koodilla 404 (not found) ja virheilmoitus
     res.status(404).json({ error: err.message });
   }
