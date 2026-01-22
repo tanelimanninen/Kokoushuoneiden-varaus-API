@@ -8,7 +8,11 @@ const rooms = [
 // Alustetaan dataan array varauksille
 const reservations = [];
 
+// Alusta dataan id
+let nextId = 1;
+
 module.exports = {
+  nextId,
   rooms,
   reservations
 };

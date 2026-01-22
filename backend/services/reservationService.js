@@ -1,32 +1,44 @@
 const db = require("../data/inMemoryDb");
 const { isOverlapping } = require("../utils/timeUtils");
+const { rooms, reservations } = db;
+
+// APUFUNKTIO: Validoi huonearvo
+function validateRoom(roomName) {
+  const exists = rooms.some(r => r.name === roomName);
+  if (!exists) {
+    throw new Error("Virheellinen huone");
+  }
+}
 
 /* FUNKTIO 1: Luo uusi varaus */
 exports.createReservation = ({ room, startTime, endTime }) => {
-  // Validointi 1: tiedot puuttuvat
+  // VALIDOINTI 1: Kaikki tiedot löytyvät
   if (!room || !startTime || !endTime) {
     // Palautetaan virheviesti
     throw new Error("Puuttuvat tiedot");
   }
+
+  // VALIDOINTI 2: Annettu huone löytyy tietokannasta
+  validateRoom(room);
 
   // Muutetaan JavaScript-olioiksi
   const start = new Date(startTime);
   const end = new Date(endTime);
   const now = new Date();
 
-  // Validointi 2: Aloitusaika on menneisyydessä
+  // VALIDOINTI 3: Aloitusaika ei ole menneisyydessä
   if (start < now) {
     // Palautetaan virheviesti
     throw new Error("Varauksen aloitusaika ei voi olla menneessä");
   }
 
-  // Validointi 3: Aloitusaika on ennen lopetusta
+  // VALIDOINTI 4: Aloitusaika ei ole ennen lopetusta
   if (start >= end) {
     // Palautetaan virheviesti
     throw new Error("Varauksen aloitusaika tulee olla ennen lopetusaikaa");
   }
 
-  // Validointi 4: Varaus ei sijoitu klo 08:00 - 18:00 välille
+  // VALIDOINTI 5: Varaus sijoittu klo 08:00 - 18:00 välille
   // Luodaan toimistoaikojen raja-arvot muuttujiin
   const OFFICE_START = 8;
   const OFFICE_END = 18;
@@ -49,7 +61,7 @@ exports.createReservation = ({ room, startTime, endTime }) => {
   }
 
   // Käydään tietokanta läpi, palauttaa true jos saman huone-arvon objektilla päällekkäinen varaus
-  const overlapping = db.reservations.some(r =>
+  const overlapping = reservations.some(r =>
     r.room === room &&
     isOverlapping(startTime, endTime, r.startTime, r.endTime)
   );
@@ -69,7 +81,7 @@ exports.createReservation = ({ room, startTime, endTime }) => {
   };
 
   // Viedään objekti tietokantaan
-  db.reservations.push(reservation);
+  reservations.push(reservation);
 
   // Palautetaan luotu varausobjekti
   return reservation;
@@ -78,7 +90,7 @@ exports.createReservation = ({ room, startTime, endTime }) => {
 /* FUNKTIO 2: Poista yksittäinen varaus */
 exports.deleteReservation = (id) => {
   // Haetaan tietokannasta parametria vastaava varausobjektin id-kenttä
-  const index = db.reservations.findIndex(r => r.id === id);
+  const index = reservations.findIndex(r => r.id === id);
 
   // Jos varausta ei löydy
   if (index === -1) {
@@ -87,13 +99,13 @@ exports.deleteReservation = (id) => {
   }
 
   // Poistetaan varaus tietokannasta annetun indeksin perusteella
-  db.reservations.splice(index, 1);
+  reservations.splice(index, 1);
 };
 
 /* FUNKTIO 3: Hae annetun huoneen varaukset */
 exports.getReservationsByRoom = (room) => {
   // Haetaan tietokannasta huonekohtaiset varaukset
-  const roomReservations = db.reservations.filter(r => r.room === room);
+  const roomReservations = reservations.filter(r => r.room === room);
 
   // Palautetaan annetun huoneen varaukset
   return roomReservations;
