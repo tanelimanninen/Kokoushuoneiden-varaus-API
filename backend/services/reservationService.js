@@ -2,14 +2,6 @@ const db = require("../data/inMemoryDb");
 const { isOverlapping } = require("../utils/timeUtils");
 const { rooms, reservations } = db;
 
-// APUFUNKTIO: Validoi huonearvo
-function validateRoom(roomName) {
-  const exists = rooms.some(r => r.name === roomName);
-  if (!exists) {
-    throw new Error("Virheellinen huone");
-  }
-}
-
 /* FUNKTIO 1: Luo uusi varaus */
 exports.createReservation = ({ room, startTime, endTime }) => {
   // VALIDOINTI 1: Kaikki tiedot löytyvät
@@ -106,7 +98,7 @@ exports.deleteReservation = (id) => {
 exports.getReservationsByRoom = (room) => {
   // VALIDOINTI 1: Annettu huone löytyy tietokannasta
   validateRoom(room);
-  
+
   // Haetaan tietokannasta huonekohtaiset varaukset
   const roomReservations = reservations.filter(r => r.room === room);
 
