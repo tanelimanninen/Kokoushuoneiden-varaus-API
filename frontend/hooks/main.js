@@ -14,7 +14,7 @@ async function createReservation() {
 
   // Jos syöttöarvo on tyhjä
   if (!room || !startTime || !endTime) {
-    showAlert("Täytä kaikki kentät", "error");
+    showAlert("Täytä lomakkeen kaikki kentät", "error");
     return;
   }
 
@@ -26,17 +26,13 @@ async function createReservation() {
       body: JSON.stringify({ room, startTime, endTime })
     });
 
-    // Jos pyyntö epäonnistuu
+    // Jos pyyntö epäonnistuu, lopetetaan tähän
     if (!response.ok) {
-      // Varmistetaan, että vastaus sisältää JSONia
-      try {
-        const err = await response.json();
-        if (err.error) errMsg = err.error;
-      } catch {
-        // Ei JSONia → käytetään oletusvirhettä
-      }
-      // Tulostetaan notifikaatio (error)
-      showAlert("Varaus epäonnistui", "error");
+      // Haetaan vastauksen body-data JSON-muodossa
+      const reservation = await response.json();
+      // Tulostetaan datan error-viesti
+      showAlert(reservation.error, "error");
+
       return;
     }
 
@@ -49,7 +45,7 @@ async function createReservation() {
 
   } catch (err) {
     // Tulostetaan notifikaatio (error)
-    showAlert("Palvelinvirhe: ", err.message);
+    showAlert("Palvelinvirhe", "error");
   }
 }
 
