@@ -128,4 +128,21 @@ describe("Reservations API - testit", () => {
       // Oletetaan vastauksen body-datan error-kentän sisältö
       expect(response.body.error).toBe("Varauksen aloitusaika tulee olla ennen lopetusaikaa");
   });
+
+   // TESTI 8: estetään varaus, kun varausaika on toimistoajan ulkopuolella (08:00 - 18:00)
+  test("POST /api/reservations - estää varauksen toimistoajan ulkopuolella", async () => {
+    // Lähetetään palvelimelle virheellinen POST-pyyntö
+    const response = await request(app)
+      .post("/api/reservations")
+      .send({
+        room: "Kokoustila A",
+        startTime: futureStart,
+        endTime: "2026-01-29T18:30"
+      });
+
+      // Oletetaan vastauksen sisältävän status-koodin 400 (bad request)
+      expect(response.statusCode).toBe(400);
+      // Oletetaan vastauksen body-datan error-kentän sisältö
+      expect(response.body.error).toBe("Varaus sallitaan vain toimistoaikana (08:00 - 18:00)");
+  });
 });
