@@ -15,7 +15,7 @@ describe("Reservations API - testit", () => {
     const response = await request(app)
       .post("/api/reservations")
       .send({
-        room: "Testihuone",
+        room: "Kokoustila A",
         startTime: futureStart,
         endTime: futureEnd
       });
@@ -25,7 +25,7 @@ describe("Reservations API - testit", () => {
     // Oletetaan id-arvon palauttavan jotain
     expect(response.body.id).toBeDefined();
     // Oletetaan vastauksen body-datan room-kentän sisältö
-    expect(response.body.room).toBe("Testihuone");
+    expect(response.body.room).toBe("Kokoustila A");
 
     // Päivitetään varaus id -muuttujan arvo seuraavia testejä varten
     reservationId = response.body.id;
@@ -35,7 +35,7 @@ describe("Reservations API - testit", () => {
   test("GET /api/reservations/:room - listaa varaukset", async () => {
     // Lähetetään palvelimelle GET-pyyntö
     const response = await request(app)
-      .get("/api/reservations/Testihuone");
+      .get("/api/reservations/Kokoustila A");
 
     // Oletetaan vastauksen sisältävät status-koodin 200 (OK)
     expect(response.statusCode).toBe(200);
@@ -44,7 +44,7 @@ describe("Reservations API - testit", () => {
     // Oletetaan vastauksen body-datan sisältävän jotain
     expect(response.body.length).toBeGreaterThan(0);
     // Oletetaan vastauksen body-datan ensimmäisen objektin room-kentän sisältö
-    expect(response.body[0].room).toBe("Testihuone");
+    expect(response.body[0].room).toBe("Kokoustila A");
   });
 
   // TESTI 3: varauksen peruutus
@@ -75,7 +75,7 @@ describe("Reservations API - testit", () => {
     await request(app)
       .post("/api/reservations")
       .send({
-        room: "OverlapHuone",
+        room: "Kokoustila C",
         startTime: futureStart,
         endTime: futureEnd
       });
@@ -84,7 +84,7 @@ describe("Reservations API - testit", () => {
     const response = await request(app)
       .post("/api/reservations")
       .send({
-        room: "OverlapHuone",
+        room: "Kokoustila C",
         startTime: futureStart,
         endTime: futureEnd
       });
@@ -101,7 +101,7 @@ describe("Reservations API - testit", () => {
     const response = await request(app)
       .post("/api/reservations")
       .send({
-        room: "Testihuone",
+        room: "Kokoustila A",
         startTime: pastTime,
         endTime: futureEnd
       });
@@ -118,7 +118,7 @@ describe("Reservations API - testit", () => {
     const response = await request(app)
       .post("/api/reservations")
       .send({
-        room: "Testihuone",
+        room: "Kokoustila A",
         startTime: futureStart,
         endTime: pastTime
       });
