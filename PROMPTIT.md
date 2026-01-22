@@ -2552,3 +2552,389 @@ Joskus:
 * tai koodi on jäänyt aiemmasta versiosta
 
 Mutta jos et käytä dataa, sitä ei ole pakko kutsua.
+
+### Minä:
+
+*Lisätään palvelimeen uusi validointi, createReservation() service-funktioon. Kuvitellaan, että varaustilat ovat käytössä vain toimistoaikoina. Sovitaan toimistoajoiksi 08:00 - 18:00. Estetään siis varauksen tekeminen tämän aikaikkunan ulkopuolella. Muutamme funkitossa ajan parametrit JavaScript-olioiksi:*
+```
+// Muutetaan JavaScript-olioiksi const start = new Date(startTime); const end = new Date(endTime); const now = new Date(); Tämän jälkeen uusi validointi: // Validointi 4: Varaus ei sijoitu klo 08:00 - 18:00 välille
+```
+
+### AI:
+
+Lisää createReservation()-service-funktioon seuraava validointi Date-olioiden luomisen jälkeen:
+```
+// Validointi 4: Varaus vain toimistoaikana 08:00–18:00
+const OFFICE_START = 8;  // 08:00
+const OFFICE_END = 18;   // 18:00
+
+const startHour = start.getHours();
+const endHour = end.getHours();
+
+// tarkistetaan myös minuutit (esim. 17:30 on ok, 18:01 ei)
+const startMinutesOk = startHour > OFFICE_START || (startHour === OFFICE_START && start.getMinutes() >= 0);
+const endMinutesOk = endHour < OFFICE_END || (endHour === OFFICE_END && end.getMinutes() === 0);
+
+if (!startMinutesOk || !endMinutesOk) {
+  throw new Error("Varaus sallitaan vain toimistoaikana klo 08:00–18:00");
+}
+```
+🔹 Tämä estää:
+* varaukset ennen klo 08:00
+* varaukset klo 18:00 jälkeen
+* varaukset, jotka ylittävät toimistoajan
+
+🔹 Ja sallii:
+* esim. 08:00–09:00
+* esim. 17:00–18:00
+
+Jos haluat yksinkertaisemman version (ilman minuutti­tarkkuutta), sekin onnistuu.
+
+### Minä:
+
+*createReservation()- ja getReservationByRoom()-servicefunktioissa molemmissa käsitelllään parametrina huonedataa. Määrittelimme käyttöliittymässä, että huonevalinnat on rajattu kolmeen: Kokoustila A, B ja C. Tämä olisi hyvä rajaus sisällyttää myös palvelimeen, että se ei hyväksy muita room-arvoja.*
+
+### AI:
+
+Tämä on erittäin hyvä havainto 👍
+Juuri näin: käyttöliittymän validointiin ei koskaan pidä luottaa yksin.
+
+Alla on selkeä ja siisti tapa toteuttaa huonevalidointi service-tasolla niin, että sitä voidaan käyttää useassa funktiossa.
+
+#### 1️⃣ Määrittele sallitut huoneet yhteen paikkaan
+📄 backend/src/services/reservationService.js (yläosaan)
+```
+const ALLOWED_ROOMS = [
+  "Kokoustila A",
+  "Kokoustila B",
+  "Kokoustila C"
+];
+```
+
+#### 2️⃣ Yhteinen huonevalidointifunktio
+```
+function validateRoom(room) {
+  if (!ALLOWED_ROOMS.includes(room)) {
+    throw new Error("Virheellinen huone");
+  }
+}
+```
+
+#### 3️⃣ Käytä validointia createReservation()-funktiossa
+```
+function createReservation(room, startTime, endTime) {
+  validateRoom(room);
+
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  const now = new Date();
+
+  // muut validoinnit...
+}
+```
+
+#### 4️⃣ Käytä validointia getReservationsByRoom()-funktiossa
+```
+function getReservationsByRoom(room) {
+  validateRoom(room);
+
+  return reservations.filter(r => r.room === room);
+}
+```
+
+#### 5️⃣ Miten controller reagoi virheeseen
+Controllerissa:
+```
+try {
+  const reservations = service.getReservationsByRoom(req.params.room);
+  res.json(reservations);
+} catch (err) {
+  res.status(400).json({ error: err.message });
+}
+```
+
+#### 6️⃣ Miksi tämä on hyvä ratkaisu
+✅ Yksi totuuden lähde huoneille
+
+✅ Sama validointi kaikille API-poluille
+
+✅ UI ei voi ohittaa rajoituksia
+
+✅ Testaus helpottuu
+
+✅ Jatkossa helppo lisätä huoneita
+
+Jos haluat, voin myös:
+* päivittää Jest-testit kattamaan virheelliset huoneet
+* lisätä huonevalidoinnin delete-toimintoon
+* tehdä enum-tyylisen ratkaisun
+
+Sanot vain 👍
+
+### Minä:
+
+*Olisiko järkevää sisällyttää huonearvot muistitietokantaan valmiiksi?*
+
+### AI:
+
+Kyllä — se on järkevää ja arkkitehtuurisesti parempi ratkaisu, etenkin jos ajattelet sovelluksen kasvua 👍
+Mutta miten se tehdään riippuu siitä, mitä tavoittelet. Alla selkeä vertailu ja suositus.
+
+#### 🔹 Nykyinen tapa (kovakoodattu lista servicessä)
+```
+const ALLOWED_ROOMS = ["Kokoustila A", "Kokoustila B", "Kokoustila C"];
+```
+Hyödyt
+* Yksinkertainen
+* Riittää demoihin ja harjoituksiin
+
+Haitat
+* Huoneet eivät ole “dataa”, vaan logiikkaa
+* Huoneita ei voi muuttaa ilman koodimuutosta
+* Ei vastaa oikeaa tietokantaratkaisua
+
+#### ✅ Suositeltu tapa: huoneet muistitietokantaan
+
+Tämä vastaa oikean sovelluksen rakennetta ja tekee palvelusta joustavamman.
+
+##### 1️⃣ Lisää huoneet muistitietokantaan
+📄 backend/src/data/inMemoryDb.js
+```
+const rooms = [
+  { id: 1, name: "Kokoustila A" },
+  { id: 2, name: "Kokoustila B" },
+  { id: 3, name: "Kokoustila C" }
+];
+
+const reservations = [];
+
+module.exports = {
+  rooms,
+  reservations
+};
+```
+
+##### 2️⃣ Päivitä huonevalidointi käyttämään tietokantaa
+📄 reservationService.js
+```
+const { rooms, reservations } = require("../data/inMemoryDb");
+
+function validateRoom(roomName) {
+  const exists = rooms.some(r => r.name === roomName);
+  if (!exists) {
+    throw new Error("Virheellinen huone");
+  }
+}
+```
+
+##### 3️⃣ Käytä validointia normaalisti servicessä
+```
+function createReservation(room, startTime, endTime) {
+  validateRoom(room);
+  // ...
+}
+
+function getReservationsByRoom(room) {
+  validateRoom(room);
+  return reservations.filter(r => r.room === room);
+}
+```
+
+##### 4️⃣ Miksi tämä on parempi ratkaisu
+✅ Huoneet ovat dataa, eivät logiikkaa
+
+✅ Vastaa oikeaa tietokantamallia
+
+✅ Helppo laajentaa (lisää huoneita, poista huoneita)
+
+✅ Mahdollistaa myöhemmin:
+* /api/rooms endpointin
+* huoneiden hallinnan UI:ssa
+* tietokantamigraation lähes suoraan
+
+#### 🧠 Milloin kovakoodaus on ok?
+* Koodikoe
+* Pieni demo
+* Yhden päivän harjoitus
+
+Mutta sinun projektisi tasolla (API + UI + testit) huoneet kannattaa ehdottomasti mallintaa dataksi.
+
+### Minä:
+
+*Päivitetään funktion toiminta vastaamaan uutta tietokantapohjaa:*
+```
+/* FUNKTIO 1: Luo uusi varaus */ exports.createReservation = ({ room, startTime, endTime }) => { // Validointi 1: tiedot puuttuvat if (!room || !startTime || !endTime) { // Palautetaan virheviesti throw new Error("Puuttuvat tiedot"); } // Muutetaan JavaScript-olioiksi const start = new Date(startTime); const end = new Date(endTime); const now = new Date(); // Validointi 2: Aloitusaika on menneisyydessä if (start < now) { // Palautetaan virheviesti throw new Error("Varauksen aloitusaika ei voi olla menneessä"); } // Validointi 3: Aloitusaika on ennen lopetusta if (start >= end) { // Palautetaan virheviesti throw new Error("Varauksen aloitusaika tulee olla ennen lopetusaikaa"); } // Validointi 4: Varaus ei sijoitu klo 08:00 - 18:00 välille // Luodaan toimistoaikojen raja-arvot muuttujiin const OFFICE_START = 8; const OFFICE_END = 18; // Haetaan parametreista tuntiarvot const startHour = start.getHours(); const endHour = end.getHours(); // Haetaan parametreista minuuttiarvot const startMinutes = start.getMinutes(); const endMinutes = end.getMinutes(); // Aloitustunti on isompi kuin raja-arvo tai se on 8 ja minuuttiarvo on 0 tai isompi const startOk = startHour > OFFICE_START || (startHour === OFFICE_START && startMinutes >= 0); // Lopetustunti on pienempi kuin raja-arvo tai se on 18 ja minuuttiarvo on 0 const endOk = endHour < OFFICE_END || (endHour === OFFICE_END && endMinutes === 0); if (!startOk || !endOk) { // Palautetaan virheviesti throw new Error("Varaus sallitaan vain toimistoaikana (08:00 - 18:00)"); } // Käydään tietokanta läpi, palauttaa true jos saman huone-arvon objektilla päällekkäinen varaus const overlapping = reservations.some(r => r.room === room && isOverlapping(startTime, endTime, r.startTime, r.endTime) ); // Validointi 4: Varaus on päällekkäinen jo olemassa olevan varauksen kanssa if (overlapping) { // Palautetaan virheviesti throw new Error("Aikaväli on jo varattu"); } // Luodaan varausobjekti const reservation = { id: db.nextId++, room, startTime, endTime }; // Viedään objekti tietokantaan reservations.push(reservation); // Palautetaan luotu varausobjekti return reservation; };
+```
+
+### AI:
+
+Alla on päivitetty versio createReservation-funktiosta, joka vastaa uutta tietokantapohjaa, eli huoneet haetaan muistitietokannasta eikä hyväksytä muita arvoja.
+
+Oletus:
+* rooms, reservations ja nextId tulevat inMemoryDb:stä
+
+#### ✅ Päivitetty createReservation (service)
+```
+const db = require("../data/inMemoryDb");
+const { isOverlapping } = require("../utils/timeUtils");
+
+exports.createReservation = ({ room, startTime, endTime }) => {
+  const { rooms, reservations } = db;
+
+  // Validointi 1: tiedot puuttuvat
+  if (!room || !startTime || !endTime) {
+    throw new Error("Puuttuvat tiedot");
+  }
+
+  // Validointi 1.5: huone ei ole olemassa tietokannassa
+  const roomExists = rooms.some(r => r.name === room);
+  if (!roomExists) {
+    throw new Error("Virheellinen huone");
+  }
+
+  // Muutetaan JavaScript-olioiksi
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  const now = new Date();
+
+  // Validointi 2: Aloitusaika on menneisyydessä
+  if (start < now) {
+    throw new Error("Varauksen aloitusaika ei voi olla menneessä");
+  }
+
+  // Validointi 3: Aloitusaika on ennen lopetusta
+  if (start >= end) {
+    throw new Error("Varauksen aloitusaika tulee olla ennen lopetusaikaa");
+  }
+
+  // Validointi 4: Varaus vain toimistoaikana 08:00–18:00
+  const OFFICE_START = 8;
+  const OFFICE_END = 18;
+
+  const startHour = start.getHours();
+  const endHour = end.getHours();
+  const startMinutes = start.getMinutes();
+  const endMinutes = end.getMinutes();
+
+  const startOk =
+    startHour > OFFICE_START ||
+    (startHour === OFFICE_START && startMinutes >= 0);
+
+  const endOk =
+    endHour < OFFICE_END ||
+    (endHour === OFFICE_END && endMinutes === 0);
+
+  if (!startOk || !endOk) {
+    throw new Error("Varaus sallitaan vain toimistoaikana (08:00 - 18:00)");
+  }
+
+  // Validointi 5: päällekkäiset varaukset
+  const overlapping = reservations.some(r =>
+    r.room === room &&
+    isOverlapping(startTime, endTime, r.startTime, r.endTime)
+  );
+
+  if (overlapping) {
+    throw new Error("Aikaväli on jo varattu");
+  }
+
+  // Luodaan varausobjekti
+  const reservation = {
+    id: db.nextId++,
+    room,
+    startTime,
+    endTime
+  };
+
+  // Tallennetaan tietokantaan
+  reservations.push(reservation);
+
+  return reservation;
+};
+```
+
+#### 🔍 Mitä muuttui olennaisesti
+✅ Huonevalidointi tehdään tietokannasta (rooms)
+
+❌ Ei enää kovakoodattuja huonelistoja
+
+✅ Service vastaa realistista tietokantamallia
+
+✅ Sama rakenne toimii myöhemmin oikean DB:n kanssa
+
+Jos haluat seuraavaksi:
+* päivitetään getReservationsByRoom vastaavaksi
+* lisätään /api/rooms
+* päivitetään Jest-testit huonevalidointiin
+
+sano vain 👍
+
+### Minä:
+
+```
+// Luodaan varausobjekti const reservation = { id: db.nextId++, room, startTime, endTime }; 
+```
+*Tässä luodaan uusi varausobjekti db.nextID++, mutta poistimme tietokantapohjasta arvon nextId.*
+
+### AI:
+
+Hyvä huomio — olet täysin oikeassa 👍
+Jos nextId on poistettu muistitietokannasta, tätä koodia ei voi enää käyttää sellaisenaan. ID:n luonti pitää ratkaista uudelleen.
+
+Alla on oikeat vaihtoehdot ja suositus.
+
+#### 🔹 Vaihtoehto 1 (suositeltu): johda ID varauksista
+
+📄 reservationService.js
+```
+const newId =
+  reservations.length === 0
+    ? 1
+    : Math.max(...reservations.map(r => r.id)) + 1;
+
+const reservation = {
+  id: newId,
+  room,
+  startTime,
+  endTime
+};
+```
+##### Miksi tämä on hyvä
+* Ei vaadi globaalia tilaa
+* Ei rikkoudu resetin jälkeen
+* Yksinkertainen ja luettava
+
+#### 🔹 Vaihtoehto 2: lisää nextId takaisin tietokantaan
+
+📄 inMemoryDb.js
+```
+let nextId = 1;
+
+module.exports = {
+  rooms,
+  reservations,
+  nextId
+};
+```
+Tämä on ok vain jos tiedostat, että:
+* tila on globaalia
+* testejä ajettaessa ID:t kasvavat
+
+#### 🔹 Vaihtoehto 3: käytä UUID:tä (paras tuotantoon)
+```
+const { randomUUID } = require("crypto");
+
+const reservation = {
+  id: randomUUID(),
+  room,
+  startTime,
+  endTime
+};
+```
+
+#### ✅ Suositus sinun projektiisi
+
+👉 Vaihtoehto 1 on paras tässä vaiheessa
+* ei lisää ylimääräistä tilaa
+* helppo testata
+* deterministinen
