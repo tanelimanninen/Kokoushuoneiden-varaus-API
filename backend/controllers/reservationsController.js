@@ -46,7 +46,7 @@ exports.getReservationsByRoom = (req, res) => {
   } catch (err) {
     // Tulostetaan terminaaliin
     console.error(`[GET] - Varausten haku epäonnistui: /api/reservations/${req.params.room}`, err.message);
-    // Palautetaan status-koodilla 500 (Internal Server Error) ja virheilmoitus
-    res.status(500).json({ error: err.message });
+    // Palautetaan status-koodilla 400 (bad request) ja virheilmoitus
+    res.status(400).json({ error: err.message });
   }
 };
