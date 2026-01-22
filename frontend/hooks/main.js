@@ -1,4 +1,5 @@
-import { showAlert, showConfirm } from "./notification.js";
+import { showAlert } from "./showAlert.js";
+import { showConfirm } from "./showConfirm.js";
 import { formatDate } from "./formatDate.js";
 
 // Haetaan DOM:ista painikkeet ja lisätään tapahtuman käsittelijät
