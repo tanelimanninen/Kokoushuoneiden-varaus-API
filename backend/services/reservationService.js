@@ -104,6 +104,9 @@ exports.deleteReservation = (id) => {
 
 /* FUNKTIO 3: Hae annetun huoneen varaukset */
 exports.getReservationsByRoom = (room) => {
+  // VALIDOINTI 1: Annettu huone löytyy tietokannasta
+  validateRoom(room);
+  
   // Haetaan tietokannasta huonekohtaiset varaukset
   const roomReservations = reservations.filter(r => r.room === room);
 
