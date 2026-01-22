@@ -1,9 +1,9 @@
 const db = require("../data/inMemoryDb");
-const { isOverlapping } = require("../utils/timeUtils");
-const { rooms, reservations } = db;
+const validateRoom = require("../utils/validateRoom");
+const { reservations } = db;
 
-/* FUNKTIO 3: Hae annetun huoneen varaukset */
-exports.getReservationsByRoom = (room) => {
+// FUNKTIO 3: Hae annetun huoneen varaukset
+function getReservationsByRoom(room) {
   // VALIDOINTI 1: Annettu huone löytyy tietokannasta
   validateRoom(room);
 
@@ -13,3 +13,5 @@ exports.getReservationsByRoom = (room) => {
   // Palautetaan annetun huoneen varaukset
   return roomReservations;
 };
+
+module.exports = getReservationsByRoom;

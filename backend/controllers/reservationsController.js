@@ -1,4 +1,4 @@
-const service = require("../services/reservationService");
+const service = require("../services");
 
 /* Luodaan POST-pyyntö osoitteessa /api/reservations */
 exports.createReservation = (req, res) => {
