@@ -1,5 +1,5 @@
 import { showAlert } from "./showAlert.js";
-// tähän vielä import loadReservations
+import { loadReservations } from "./loadReservations.js";
 
 // Varauksen luomisen käsittely käyttöliittymässä (POST)
 async function createReservation() {

@@ -1,6 +1,6 @@
-import { showConfirm } from "./showConfirm";
-import { showAlert } from "./showAlert";
-import { loadReservations } from "./loadReservations";
+import { showConfirm } from "./showConfirm.js";
+import { showAlert } from "./showAlert.js";
+import { loadReservations } from "./loadReservations.js";
 
 // Varausten poistaminen käyttöliittymässä (DELETE)
 async function deleteReservation(id) {

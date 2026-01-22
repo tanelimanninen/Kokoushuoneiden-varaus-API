@@ -1,5 +1,5 @@
 import { formatDate } from "./formatDate.js";
-// import deleteReservation
+import { deleteReservation } from "./deleteReservation.js";
 
 // Varausten tulostaminen käyttöliittymässä (GET)
 async function loadReservations() {
