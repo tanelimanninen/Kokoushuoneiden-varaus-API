@@ -2938,3 +2938,379 @@ const reservation = {
 * ei lisää ylimääräistä tilaa
 * helppo testata
 * deterministinen
+
+### Minä:
+
+*Lisätään nextId takaisn tietokantaan. Ei tarvitse vastata.*
+
+### AI:
+
+👍
+
+### Minä:
+
+*Siistitään seuraavaksi reservationService, jakamalla se useisiin omiin tiedostoihin. Siirrämme apufunktion validateRoom() utils-hakemistoon ja jaamme kolme servicefunktiota omiin tiedostoihinsa, services-hakemiston alle.*
+
+### AI:
+
+Hyvä ja järkevä refaktorointi 👍
+Alla selkeä malli, miten tämä kannattaa tehdä ilman että logiikka hajoaa.
+
+#### 1️⃣ Uusi kansiorakenne (services + utils)
+```
+backend/
+├── src/
+│   ├── services/
+│   │   ├── createReservation.js
+│   │   ├── getReservationsByRoom.js
+│   │   └── deleteReservation.js
+│   │
+│   ├── utils/
+│   │   ├── validateRoom.js
+│   │   └── timeUtils.js
+│   │
+│   ├── data/
+│   │   └── inMemoryDb.js
+│   │
+│   └── services/
+│       └── index.js   ← (koontitiedosto, suositeltu)
+```
+
+#### 2️⃣ validateRoom() utils-kansioon
+
+📄 src/utils/validateRoom.js
+```
+const db = require("../data/inMemoryDb");
+
+function validateRoom(room) {
+  const exists = db.rooms.some(r => r.name === room);
+  if (!exists) {
+    throw new Error("Virheellinen huone");
+  }
+}
+
+module.exports = validateRoom;
+```
+
+#### 3️⃣ Service-funktiot omiin tiedostoihin
+📄 services/createReservation.js
+```
+const db = require("../data/inMemoryDb");
+const validateRoom = require("../utils/validateRoom");
+const { isOverlapping } = require("../utils/timeUtils");
+
+module.exports = function createReservation({ room, startTime, endTime }) {
+  const { reservations } = db;
+
+  if (!room || !startTime || !endTime) {
+    throw new Error("Puuttuvat tiedot");
+  }
+
+  validateRoom(room);
+
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  const now = new Date();
+
+  if (start < now) {
+    throw new Error("Varauksen aloitusaika ei voi olla menneessä");
+  }
+
+  if (start >= end) {
+    throw new Error("Varauksen aloitusaika tulee olla ennen lopetusaikaa");
+  }
+
+  const OFFICE_START = 8;
+  const OFFICE_END = 18;
+
+  const startHour = start.getHours();
+  const endHour = end.getHours();
+  const startMinutes = start.getMinutes();
+  const endMinutes = end.getMinutes();
+
+  const startOk =
+    startHour > OFFICE_START ||
+    (startHour === OFFICE_START && startMinutes >= 0);
+
+  const endOk =
+    endHour < OFFICE_END ||
+    (endHour === OFFICE_END && endMinutes === 0);
+
+  if (!startOk || !endOk) {
+    throw new Error("Varaus sallitaan vain toimistoaikana (08:00 - 18:00)");
+  }
+
+  const overlapping = reservations.some(r =>
+    r.room === room &&
+    isOverlapping(startTime, endTime, r.startTime, r.endTime)
+  );
+
+  if (overlapping) {
+    throw new Error("Aikaväli on jo varattu");
+  }
+
+  const reservation = {
+    id: db.nextId++,
+    room,
+    startTime,
+    endTime
+  };
+
+  reservations.push(reservation);
+  return reservation;
+};
+```
+
+📄 services/getReservationsByRoom.js
+```
+const db = require("../data/inMemoryDb");
+const validateRoom = require("../utils/validateRoom");
+
+module.exports = function getReservationsByRoom(room) {
+  validateRoom(room);
+  return db.reservations.filter(r => r.room === room);
+};
+```
+
+📄 services/deleteReservation.js
+```
+const db = require("../data/inMemoryDb");
+
+module.exports = function deleteReservation(id) {
+  const index = db.reservations.findIndex(r => r.id === id);
+  if (index === -1) {
+    throw new Error("Varausta ei löytynyt");
+  }
+
+  db.reservations.splice(index, 1);
+};
+```
+
+#### 4️⃣ Koontitiedosto services-hakemistoon (tärkeä)
+
+📄 services/index.js
+```
+const createReservation = require("./createReservation");
+const getReservationsByRoom = require("./getReservationsByRoom");
+const deleteReservation = require("./deleteReservation");
+
+module.exports = {
+  createReservation,
+  getReservationsByRoom,
+  deleteReservation
+};
+```
+
+#### 5️⃣ Controller pysyy siistinä
+
+📄 controllers/reservationsController.js
+```
+const service = require("../services");
+
+exports.createReservation = (req, res) => {
+  try {
+    const reservation = service.createReservation(req.body);
+    res.status(201).json(reservation);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+```
+
+#### ✅ Miksi tämä on erinomainen rakenne
+🧩 Yksi vastuu per tiedosto
+
+🔁 Utils uudelleenkäytettäviä
+
+🧪 Testaus helpottuu (voit testata yhden funktion kerrallaan)
+
+🚀 Helppo laajentaa ilman että tiedostot paisuvat
+
+🧠 Vastaa tuotantotason rakennetta
+
+### Minä:
+
+*Miksi luoda index.js services-hakemistoon? Eikö olisi kätevämpi kutstua jokaista servicefunktiota erikseen controllerissa?*
+
+### AI:
+
+Hyvä kysymys – tämä menee suoraan arkkitehtuurin ytimeen 👍
+Lyhyt vastaus: molemmat toimivat, mutta services/index.js tuo selkeitä etuja, kun projekti kasvaa.
+
+Alla rauhallinen ja konkreettinen vertailu.
+
+#### ❌ Ilman services/index.js (suora import)
+Controller:
+```
+const createReservation = require("../services/createReservation");
+const getReservationsByRoom = require("../services/getReservationsByRoom");
+const deleteReservation = require("../services/deleteReservation");
+```
+##### Hyödyt
+* Täysin ok pienessä projektissa
+* Ei “ylimääräistä” tiedostoa
+##### Haitat
+* Controller alkaa täyttyä importeista
+* Polut toistuvat ja pitenevät
+* Jokainen muutos servicessä vaatii muutoksia useissa controllereissa
+
+#### ✅ services/index.js (koontipiste)
+```
+const service = require("../services");
+```
+Ja käyttö:
+```
+service.createReservation(...)
+service.getReservationsByRoom(...)
+```
+
+#### Hyödyt (tärkeimmät)
+##### 1️⃣ Yksi julkinen rajapinta
+Controller ei tiedä:
+* missä tiedosto sijaitsee
+* montako serviceä on
+* miten ne on jaettu
+
+Se tietää vain: "services tarjoaa nämä toiminnot".
+
+##### 2️⃣ Vähemmän rikkoutumisia refaktoroinnissa
+Jos myöhemmin:
+* yhdistät tiedostoja
+* jaat logiikkaa uudelleen
+* vaihdat nimeämistä
+
+👉 vain services/index.js muuttuu.
+Controllerit pysyvät koskemattomina.
+
+##### 3️⃣ Selkeämpi vastuunjako
+* Controller: HTTP + virheenkäsittely
+* Service: liiketoimintalogiikka
+* Index: modulien kokoaminen
+
+Tämä on sama malli kuin:
+* Node core
+* Express middlewaret
+* useimmat suuret backendit
+
+##### 4️⃣ Parempi testattavuus ja mockaus
+
+Testeissä voit tehdä:
+```
+jest.mock("../services", () => ({
+  createReservation: jest.fn(),
+  getReservationsByRoom: jest.fn(),
+}));
+```
+Ilman indexiä mockaus on:
+* monimutkaisempaa
+* hajautettua
+
+#### 🧠 Milloin index.js ei ole tarpeen?
+* Yksi service
+* Ei kasvamassa
+* Ei refaktorointia
+
+Mutta sinun projektisi:
+* useita servicejä
+* testit
+* frontend + backend
+* validoinnit
+
+👉 index.js on oikea ratkaisu.
+
+#### 🔑 Yhteenveto
+
+| Tapa                | Toimiiko | Skaalautuu | Siisti |
+| ------------------- | -------- | ---------- | ------ |
+| Suorat importit     | ✅        | ❌          | ⚠️     |
+| `services/index.js` | ✅        | ✅          | ✅      |
+
+Hyvä että kysyit tämän – tämä on juuri sitä ajattelua, jota odotetaan oikeissa backend-projekteissa.
+
+### Minä:
+
+*Päätin edetä tällä pohjalla. Ei tarvitse vastata, ellet havaitse virheitä:*
+```
+const db = require("../data/inMemoryDb"); 
+const validateRoom = require("../utils/validateRoom");
+const { isOverlapping } = require("../utils/timeUtils");
+
+// Luo uusi varaus
+function createReservation({ room, startTime, endTime }) {
+  // VALIDOINTI 1: Kaikki tiedot löytyvät
+  if (!room || !startTime || !endTime) {
+    // Palautetaan virheviesti
+    throw new Error("Puuttuvat tiedot");
+  }
+
+  // VALIDOINTI 2: Annettu huone löytyy tietokannasta
+  validateRoom(room);
+
+  // Muutetaan JavaScript-olioiksi
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  const now = new Date();
+
+  // VALIDOINTI 3: Aloitusaika ei ole menneisyydessä
+  if (start < now) {
+    // Palautetaan virheviesti
+    throw new Error("Varauksen aloitusaika ei voi olla menneessä");
+  }
+
+  // VALIDOINTI 4: Aloitusaika ei ole ennen lopetusta
+  if (start >= end) {
+    // Palautetaan virheviesti
+    throw new Error("Varauksen aloitusaika tulee olla ennen lopetusaikaa");
+  }
+
+  // VALIDOINTI 5: Varaus sijoittu klo 08:00 - 18:00 välille
+  // Luodaan toimistoaikojen raja-arvot muuttujiin
+  const OFFICE_START = 8;
+  const OFFICE_END = 18;
+
+  // Haetaan parametreista tuntiarvot
+  const startHour = start.getHours();
+  const endHour = end.getHours();
+  // Haetaan parametreista minuuttiarvot
+  const startMinutes = start.getMinutes();
+  const endMinutes = end.getMinutes();
+
+  // Aloitustunti on isompi kuin raja-arvo tai se on 8 ja minuuttiarvo on 0 tai isompi
+  const startOk = startHour > OFFICE_START || (startHour === OFFICE_START && startMinutes >= 0);
+  // Lopetustunti on pienempi kuin raja-arvo tai se on 18 ja minuuttiarvo on 0
+  const endOk = endHour < OFFICE_END || (endHour === OFFICE_END && endMinutes === 0);
+
+  if (!startOk || !endOk) {
+    // Palautetaan virheviesti
+    throw new Error("Varaus sallitaan vain toimistoaikana (08:00 - 18:00)");
+  }
+
+  // Käydään tietokanta läpi, palauttaa true jos saman huone-arvon objektilla päällekkäinen varaus
+  const overlapping = reservations.some(r =>
+    r.room === room &&
+    isOverlapping(startTime, endTime, r.startTime, r.endTime)
+  );
+
+  // Validointi 4: Varaus on päällekkäinen jo olemassa olevan varauksen kanssa
+  if (overlapping) {
+    // Palautetaan virheviesti
+    throw new Error("Aikaväli on jo varattu");
+  }
+
+  // Luodaan varausobjekti
+  const reservation = {
+    id: db.nextId++,
+    room,
+    startTime,
+    endTime
+  };
+
+  // Viedään objekti tietokantaan
+  reservations.push(reservation);
+
+  // Palautetaan luotu varausobjekti
+  return reservation;
+};
+
+module.exports = createReservation;
+```
