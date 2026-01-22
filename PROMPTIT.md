@@ -3314,3 +3314,103 @@ function createReservation({ room, startTime, endTime }) {
 
 module.exports = createReservation;
 ```
+
+### AI:
+
+Hyvä pohja 👍 Löytyy kuitenkin kaksi oikeaa virhettä, jotka kannattaa korjata:
+
+#### ❌ 1. reservations ei ole määritelty
+
+Käytät:
+```
+const overlapping = reservations.some(...)
+...
+reservations.push(reservation);
+```
+Mutta reservations-muuttujaa ei ole määritelty missään.
+Koska toit db:n, oikea viittaus on:
+```
+const { reservations } = db;
+```
+👉 Lisää heti funktion alkuun (tai tiedoston alkuun)
+
+#### ⚠️ 2. Validointinumero menee päällekkäin (pieni mutta selkeä)
+
+Sinulla on:
+```
+// Validointi 4: Varaus on päällekkäinen jo olemassa olevan varauksen kanssa
+```
+Mutta tämä on jo järjestyksessä kuudes validointi.
+Ei riko koodia, mutta kannattaa korjata luettavuuden vuoksi.
+
+#### Mutta tämä on jo järjestyksessä kuudes validointi.
+Ei riko koodia, mutta kannattaa korjata luettavuuden vuoksi.
+```
+function createReservation({ room, startTime, endTime }) {
+  const { reservations } = db;
+  ...
+}
+```
+
+#### 🔍 Muuten
+* Logiikka on oikein
+* Rakenteellisesti siisti
+* Hyvin jaettu vastuu
+* Valmiina testattavaksi
+
+Tämä on jo tuotantotason service-funktio pienelle sovellukselle 👌
+
+### Minä:
+
+*Järjestelin frontend-hakemiston hooks-alahakemiston uusiksi. showAlert.js, showConfirm.js, createReservation.js, loadReservations.js, deleteReservation.js ja main.js. Kantatiedoston main.js sisältö:*
+```
+import { createReservation } from "./createReservation.js";
+import { loadReservations } from "./loadReservations.js";
+
+// Haetaan DOM:ista painikkeet ja lisätään tapahtuman käsittelijät
+document.getElementById("createBtn").addEventListener("click", createReservation);
+document.getElementById("searchBtn").addEventListener("click", loadReservations);
+```
+
+### AI:
+
+Tämä on lähes oikein 👍
+Huomaan kuitenkin yhden olennaisen asian, joka usein aiheuttaa ongelmia tässä vaiheessa:
+
+#### ⚠️ 1️⃣ ES-modulejen käyttö selaimessa vaatii type="module"
+
+Koska käytät:
+```
+import { createReservation } from "./createReservation.js";
+```
+index.html-tiedostossa script-tagin pitää olla:
+```
+<script type="module" src="./hooks/main.js"></script>
+```
+❌ Ilman type="module":
+* import ei toimi
+* selain heittää virheen konsoliin
+
+#### ⚠️ 2️⃣ Polut ovat oikein vain, jos rakenne on tämä
+```
+frontend/
+├── index.html
+├── hooks/
+│   ├── main.js
+│   ├── createReservation.js
+│   └── loadReservations.js
+```
+Ja main.js:
+```
+import { createReservation } from "./createReservation.js";
+import { loadReservations } from "./loadReservations.js";
+```
+Jos main.js olisi ylemmällä tasolla, polut pitäisi muuttaa (./hooks/...).
+
+#### ✅ Muuten rakenne on erittäin hyvä
+* Vastuut jaettu oikein
+* Yksi toiminto per tiedosto
+* main.js toimii “liimana”
+* Helppo testata ja ylläpitää
+
+Tämä on oikea tapa rakentaa frontend-logiikka modulaarisesti ilman frameworkia.
