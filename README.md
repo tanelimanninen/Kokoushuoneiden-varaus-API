@@ -73,6 +73,7 @@ Kokoushuoneiden-varaus-API/
     ├── package.json
     ├── .gitignore
     └── md-tiedostot
+```
 
 ### 📦 3. Backendin riippuvuuksien asennus
 
