@@ -84,7 +84,7 @@ li button:hover {
 }
 
 /* Varausten listakomponentti */
-.reservation-list {
+.reservation-list, .search-container, .list-container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -93,6 +93,15 @@ li button:hover {
 /* Varausten listakomponentti, valintakenttä */
 .reservation-list select {
   background-color: rgb(240, 240, 240);
+}
+
+/**/
+.list-container h3 {
+  margin-bottom: 0;
+}
+
+.list-container ul {
+  margin-top: 5px;
 }
 
 /* Notifikaation pohjakomponentti */

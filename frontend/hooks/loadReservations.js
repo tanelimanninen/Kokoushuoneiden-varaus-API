@@ -11,7 +11,7 @@ async function loadReservations() {
   // Haetaan listan otsikkoelementti
   const header = document.getElementById("activeRoomName");
   // Päivitetään lista-elementin yllä oleva otsikko aktiivisella kokoustilan nimellä (joka haun yhteydessä)
-  header.textContent = room;
+  header.textContent = room + ":";
 
   // Haetaan palvelimelta huonekohtainen data
   const response = await fetch(`/api/reservations/${room}`);
