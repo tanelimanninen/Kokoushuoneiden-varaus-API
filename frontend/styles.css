@@ -83,23 +83,23 @@ li button:hover {
   margin: 0px;
 }
 
-/* Varausten listakomponentti */
+/* Varausten listakomponentti (parent), hakukomponentti (child), listakomponentti (child) */
 .reservation-list, .search-container, .list-container {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-/* Varausten listakomponentti, valintakenttä */
-.reservation-list select {
+/* Hakukomponentti (child), valintakenttä */
+.search-container select {
   background-color: rgb(240, 240, 240);
 }
 
-/**/
+/* Listakomponentti (child), h3-otsikko */
 .list-container h3 {
   margin-bottom: 0;
 }
-
+/* Listakomponentti (child), ul-komponentti */
 .list-container ul {
   margin-top: 5px;
 }
