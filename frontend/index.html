@@ -26,14 +26,19 @@
   </div>
 
   <div class="reservation-list">
+    <div class="search-container">
     <h2>Hae tietyn huoneen varauksia</h2>
-    <select id="searchRoom">
-      <option value="Kokoustila A">Kokoustila A</option>
-      <option value="Kokoustila B">Kokoustila B</option>
-      <option value="Kokoustila C">Kokoustila C</option>
-    </select>
-    <button id="searchBtn">Hae</button>
-    <ul id="reservations"></ul>
+      <select id="searchRoom">
+        <option value="Kokoustila A">Kokoustila A</option>
+        <option value="Kokoustila B">Kokoustila B</option>
+        <option value="Kokoustila C">Kokoustila C</option>
+      </select>
+      <button id="searchBtn">Hae</button>
+    </div>
+    <div class="list-container">
+      <h3 id="activeRoomName"></h3>
+      <ul id="reservations"></ul>
+    </div>
   </div>
 
   <script type="module" src="./hooks/main.js"></script>

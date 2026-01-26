@@ -8,6 +8,10 @@ async function loadReservations() {
   // Haetaan DOM:ista lista-komponentti
   const list = document.getElementById("reservations");
   list.innerHTML = "";
+  // Haetaan listan otsikkoelementti
+  const header = document.getElementById("activeRoomName");
+  // Päivitetään lista-elementin yllä oleva otsikko aktiivisella kokoustilan nimellä (joka haun yhteydessä)
+  header.textContent = room;
 
   // Haetaan palvelimelta huonekohtainen data
   const response = await fetch(`/api/reservations/${room}`);
@@ -47,6 +51,8 @@ async function loadReservations() {
     // Määritellään poistopainikkeen tapahtuman käsittelijä
     deleteBtn.onclick = () => deleteReservation(r.id);
   });
+
+  
 }
 
 export { loadReservations };
