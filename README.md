@@ -2,6 +2,41 @@
 
 Tämä sovellus on ennakkotehtävä Vincitille, osana rekrytointiprosessia. Se on toteutettu tammikuussa vuonna 2026.
 
+## Sovelluksen UI:n havainnointia
+
+Havainnollistavia kuvakaappauksia sovelluksen käyttöliittymästä. Sovellus toimii single page -ratkaisuna, eli yhden sivun näkymässä.
+
+### Päänäkymä kokonaisuudessaan
+![Käyttöliittymä kokonaisuudessaan.](/assets/UI_full.png "Käyttöliittymä kokonaisuudessaan.")
+
+### Varauslomake
+![Käyttöliittymän varauslomake.](/assets/UI_reservationform.png "Käyttöliittymän varauslomake.")
+
+#### Varauslomakkeen input-kenttä avattuna
+![Käyttöliittymän varauslomakken input-kenttä.](/assets/UI_reservationform_input.png "Käyttöliittymän varauslomakken input-kenttä.")
+
+#### Varauslomakkeen select-kenttä avattuna
+![Käyttöliittymän varauslomakken select-kenttä.](/assets/UI_reservationform_select.png "Käyttöliittymän varauslomakken select-kenttä.")
+
+### Varauslistaus
+![Käyttöliittymän varauslistaus.](/assets/UI_reservationlist.png "Käyttöliittymän varauslistaus.")
+
+#### Varauslistauksen poistopainike aktiivisena
+![Käyttöliittymän varauslistauksen poistopainikkeet.](/assets/UI_reservationlist_deletebutton.png "Käyttöliittymän varauslistauksen poistopainikkeet.")
+
+### Käyttöliittymän notifikaatioviestien toiminta
+
+Havainnollistetaan seuraavaksi käyttöliittymän notifikaatioiden toimintaa. Havainnollistaminen tapahtuu yksittäisen varauksen poisto -toiminnon kautta, sekä viallisen varauksen luomisen yrittämisen kautta.
+
+#### Varmistusviesti varauksen poiston yhteydessä
+![Käyttöliittymän varmistusviesti.](/assets/UI_confirmalert.png "Käyttöliittymän varmistusviesti.")
+
+#### Onnistumisviesti varauksen poiston yhteydessä
+![Käyttöliittymän onnistumisviesti.](/assets/UI_successalert.png "Käyttöliittymän onnistumisviesti.")
+
+#### Virheviesti uuden varauksen tekemisen yhteydessä
+![Käyttöliittymän virheviesti.](/assets/UI_erroralert.png "Käyttöliittymän virheviesti.")
+
 ## 🖥 Kehitysversion asennusohje
 
 Tämä ohje neuvoo, miten sovellus ajetaan lokaalisti kehitysympäristössä, tästä GitHub-repositoriosta.
