@@ -38,13 +38,11 @@ Halusin tehtävässä myös panostaa omiin vahvuusalueisiini ja pitää projekti
 
 Toteutin käyttöliittymään kustomoidut notifikaatiot, jotka tukivat lomakkeen käyttöä sekä varauksen poisto -toimintoa. Notifikaatiot toimivat ehdollisesti (error/success) ja sisälsivät myös varmistusviestin varauksen poiston yhteydessä. Tämä kulki käsi kädessä palvelimen POST-pyyntöjen validoinnin kanssa ja esti esimerkiksi tyhjän lomakkeen lähettämisen. Käyttäjä pidettiin jatkuvasti ajan tasalla toimintojen onnistumisesta tai epäonnistumisesta.
 
-
+## Toimintalogiikka ja validoinnit
 
 Käyttöliittymän kehityksen myötä tein myös oletuksen, että varattavien huonetilojen määrä tulisi rajata. Tekoälyn alkuperäinen ratkaisu salli käytännössä minkä tahansa huonearvon, mikä ei ollut järkevää. Muutin lomakkeen huonekentän pudotusvalikoksi, johon sisällytin kolme ennalta määriteltyä tilavaihtoehtoa. Päivitin myös palvelimen muistitietokannan vastaamaan näitä arvoja ja lisäsin huonekohtaisen GET-pyynnön validoinnin, joka varmisti annetun huoneen olemassaolon.
 
-## Toimintalogiikka ja validoinnit
-
-Lisäsin POST-pyyntöihin myös omaa validointilogiikkaa. Toteutin rajauksen, joka esti varausten tekemisen toimistoaikojen (klo 8.00–18.00) ulkopuolella. Mahdollisia lisärajauksia olisi ollut esimerkiksi viikonloppuvaraukset, liian pitkät tai liian lyhyet varaukset, mutta rajasin validoinnin yhteen sääntöön ajankäytön vuoksi. Jokaiselle lisäämälleni validaatiolle toteutin myös oman automaatiotestin, joka varmisti virheellisen datan estymisen.
+Lisäsin POST-pyyntöihin tehtävänannossa mainitun toimintalogiikan lisäksi myös omaa validointilogiikkaa. Toteutin rajauksen, joka esti varausten tekemisen toimistoaikojen (klo 8.00–18.00) ulkopuolella. Mielessäni käyneitä mahdollisia lisärajauksia olisi ollut esimerkiksi viikonloppuvaraukset, liian pitkät tai liian lyhyet varaukset, mutta rajasin oman validoinnin yhteen sääntöön ajankäytön vuoksi. Jokaiselle lisäämälleni validaatiolle toteutin myös oman automaatiotestin, joka varmisti virheellisen datan estymisen.
 
 ## Johtopäätökset tekoälyn hyödyntämisestä
 
