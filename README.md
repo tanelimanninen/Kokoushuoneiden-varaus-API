@@ -109,14 +109,14 @@ npm run dev
 Onnistuneen käynnistyksen jälkeen konsoliin tulostuu:
 ```
 Server running on port 3000
-Open UI from here: http://localhost:{.env-tiedostoon laittamasi portin numero}/
+Open UI from here: http://localhost:{.env-tiedoston_portin_numero}/
 ```
 
 Käyttöliittymä toimii nyt konsoliin tulostetussa URL:issa
 
 API:t toimivat nyt osoitteessa:
 ```
-http://localhost:{portin numero}/api/reservations/
+http://localhost:{portin_numero}/api/reservations/
 ```
 
 ### 🧪 6. Backend-testien ajaminen (Jest)
@@ -145,5 +145,5 @@ cd backend
 npm run dev
 
 // Selain
-avaa http://localhost:{porttisi numero}/
+avaa http://localhost:{portin_numero}/
 ```
