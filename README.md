@@ -139,7 +139,7 @@ Testit käyttävät Express-sovellusta suoraan (app.js), eivät avaa porttia.
 * Backendin virheet ja logit näkyvät Node-konsolissa
 * Selainkonsoli (DevTools) näyttää frontend-virheet
 
-### ✅ 9. Tyypillinen kehitystyönkulku
+### ✅ 8. Tyypillinen kehitystyönkulku
 ```
 // Terminal 1
 cd backend
