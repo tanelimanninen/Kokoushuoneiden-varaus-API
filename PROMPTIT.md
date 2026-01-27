@@ -3414,3 +3414,281 @@ Jos main.js olisi ylemmällä tasolla, polut pitäisi muuttaa (./hooks/...).
 * Helppo testata ja ylläpitää
 
 Tämä on oikea tapa rakentaa frontend-logiikka modulaarisesti ilman frameworkia.
+
+### Minä:
+
+*Dokumentoidaan seuraavaksi sovelluksen kehitysversion asennusohjeet lokaalisti Github-repositoriosta. Otetaan huomioon seuraavat asiat: Tarvittavat asennukset lokaalisti (esim. node.js), git clone (https), /backend-hakemiston sisällä ajettavat npm-asennukset (node_modules), serverin käynnistys, käyttöliittymän avaus (URL), serverin testien ajot jne.*
+
+### AI:
+
+Alla on selkeä ja käytännöllinen README-tason asennus- ja käyttöohje, joka sopii hyvin GitHub-repositorioosi kehitysvaiheessa.
+
+#### 📅 Kokoushuoneiden varausjärjestelmä – Kehitysversion asennusohje
+
+Tämä ohje neuvoo, miten sovellus ajetaan lokaalisti kehitysympäristössä GitHub-repositoriosta.
+
+##### 🔧 1. Vaatimukset
+
+Varmista, että seuraavat työkalut on asennettu koneellesi:
+
+* Node.js (suositus: LTS-versio)
+
+👉 https://nodejs.org
+
+Tarkista asennus:
+```
+node -v
+npm -v
+```
+
+* Git
+
+👉 https://git-scm.com
+
+Tarkista:
+```
+git --version
+```
+
+##### 📥 2. Projektin kloonaus GitHubista
+
+Kloonaa projekti HTTPS:n kautta:
+```
+git clone https://github.com/<käyttäjänimi>/<repository>.git
+```
+Siirry projektin juureen:
+```
+cd <repository>
+```
+
+Projektin rakenne:
+```
+project-root/
+├── frontend/
+│   ├── index.html
+│   ├── styles.css
+│   └── hooks/
+│       └── main.js
+│
+└── backend/
+    ├── src/
+    ├── package.json
+    └── .env
+```
+
+##### 📦 3. Backendin riippuvuuksien asennus
+
+Siirry backend-kansioon ja asenna npm-riippuvuudet:
+```
+cd backend
+npm install
+```
+Tämä luo node_modules-hakemiston (ei versionhallinnassa).
+
+##### ⚙️ 4. Ympäristömuuttujat
+
+Varmista, että backend-kansiossa on .env-tiedosto:
+
+📄 backend/.env
+```
+PORT=3000
+```
+
+##### ▶️ 5. Palvelimen käynnistys
+
+Backend käynnistetään backend-kansiosta:
+
+Normaali käynnistys
+```
+npm start
+```
+Kehitystila (nodemon)
+```
+npm run dev
+```
+Konsolissa pitäisi näkyä esim:
+```
+Server käynnissä portissa 3000
+```
+Backend API on tällöin saatavilla osoitteessa:
+```
+http://localhost:3000
+```
+
+##### 🌐 6. Käyttöliittymän avaaminen
+
+Frontend on puhdas HTML/CSS/JS eikä vaadi buildausta.
+
+**Vaihtoehto A: VS Code Live Server (suositeltu)**
+
+* Avaa frontend/index.html
+
+* Käynnistä Live Server
+
+**Vaihtoehto B: Suora avaaminen**
+
+* Avaa frontend/index.html selaimessa
+
+Käyttöliittymä käyttää backend-APIa osoitteessa:
+```
+http://localhost:3000/api/...
+```
+
+##### 🧪 7. Backend-testien ajaminen (Jest)
+
+Testit ajetaan ilman serverin käynnistämistä.
+
+Backend-kansiossa:
+```
+npm test
+```
+Tai yksittäinen testitiedosto:
+```
+npm test reservations.test.js
+```
+Testit käyttävät Express-sovellusta suoraan (app.js), eivät avaa porttia.
+
+##### 🔁 8. Yleisiä huomioita
+
+* Backend ja frontend ajetaan erillään
+
+* Frontend ei tarvitse npm-asennuksia
+
+* Backendin virheet ja logit näkyvät Node-konsolissa
+
+* Selainkonsoli (DevTools) näyttää frontend-virheet
+
+##### ✅ 9. Tyypillinen kehitystyönkulku
+```
+# Terminal 1
+cd backend
+npm run dev
+
+# Selain
+avaa frontend/index.html
+```
+
+📌 Tämä dokumentaatio vastaa kehitysvaiheen käyttöä ja on helposti laajennettavissa tuotanto-ohjeiksi myöhemmin.
+
+### Minä:
+
+*Miten selittäisit lyhyesti /backend/src-hakemiston sisällön tarkoituksen? Se sisältää tällä hetkellä vain app.js ja server.js tiedostot*
+
+### AI:
+
+Lyhyesti ja ytimekkäästi näin 👇
+
+`/backend/src` sisältää palvelimen lähdekoodin ytimen – eli kaiken sen koodin, joka määrittelee miten backend toimii, mutta ei itse käynnistä ympäristöä tai asennuksia.
+
+Tässä projektissa:
+
+* app.js
+
+    * Määrittelee Express-sovelluksen:
+        * middlewaret
+        * reitit (/api/...)
+        * controllerien kytkennät
+    * 👉 “Mitä API tekee”
+* server.js
+    * Käynnistää sovelluksen:
+        * lukee ympäristömuuttujat
+        * avaa portin
+        * kutsuu app.listen()
+    * 👉 “Missä ja milloin API käynnistyy”
+
+Yhdessä:
+> src = sovelluksen logiikka
+>
+> juurikansio = konfiguraatio ja ajaminen
+
+Tämä jako mahdollistaa mm. sen, että:
+* testit voivat käyttää app.js:ää ilman serverin käynnistystä
+* samaa sovellusta voi ajaa eri ympäristöissä eri tavoin
+
+Jos haluat vielä yhden lauseen version READMEen:
+>"backend/src sisältää backend-sovelluksen varsinaisen lähdekoodin ja Express-konfiguraation."
+
+### Minä: 
+
+*Entä jos asentajalla on käytössään mac?*
+
+### AI:
+
+Hyvä tarkennus 👍
+Mac ei muuta kokonaisuutta, mutta asennusohjeisiin kannattaa lisätä pari mac-spesifiä huomiota, jotta kukaan ei jää jumiin.
+
+Lyhyesti: ohjeet ovat lähes samat, mutta näin selittäisin sen READMEssä.
+
+#### macOS-käyttäjille huomioitavaa
+
+* Node.js
+    * Suositeltu tapa macilla on asentaa Node:
+        * Homebrewilla (brew install node) tai
+        * suoraan Node.js:n viralliselta sivulta
+    * Tarkistus:
+    ```
+    node -v
+    npm -v
+    ```
+* Git
+    * macOS:ssä Git on yleensä valmiina
+(tai Xcode Command Line Tools asentaa sen automaattisesti)
+    * Tarkistus:
+    ```
+    git --version
+    ```
+* Portit
+    * macOS ei yleensä estä porttia 3000 tai 5000, mutta
+jos selain ei saa yhteyttä, kannattaa tarkistaa ettei portti ole jo käytössä:
+    ```
+    lsof -i :3000
+    ```
+* Frontendin avaaminen
+    * Frontend voidaan avata:
+        * suoraan selaimessa (file:///...)
+        * tai kevyellä dev-serverillä (esim. VS Coden Live Server)
+    * macissa Safari saattaa estää joitain fetch-kutsuja file://-osoitteesta →
+Chrome tai Firefox suositeltu
+
+#### Ytimekäs README-lisäys (esimerkki)
+
+> Ohjeet toimivat Windows-, Linux- ja macOS-ympäristöissä.
+macOS-käyttäjille suositellaan Node.js:n asennusta Homebrewilla ja käyttöliittymän testaamista Chrome- tai Firefox-selaimella.
+
+### Minä:
+
+*Päivitin UI:n DOM:ia seuraavanlaisesti. Älä reagoi:* 
+```
+<div class="reservation-list"> <h2>Hae tietyn huoneen varauksia</h2> <select id="searchRoom"> <option value="Kokoustila A">Kokoustila A</option> <option value="Kokoustila B">Kokoustila B</option> <option value="Kokoustila C">Kokoustila C</option> </select> <button id="searchBtn">Hae</button> <h3 id="activeRoomName"></h3> <ul id="reservations"></ul> </div>```
+```
+
+### AI:
+
+👍
+
+### Minä:
+
+*loadReservations-funktiossa, room-muuttujan tulostus header-elementissa ei toimi näin:*
+```
+// Haetaan DOM:ista huoneen valintakentän arvo const room = document.getElementById("searchRoom").value; console.log(room); // Haetaan listan otsikkoelementti const header = document.getElementById("activeRoomName"); // Päivitetään lista-elementin yllä oleva otsikko aktiivisella kokoustilan nimellä header.appendChild(room);
+```
+
+### AI:
+
+Ongelma on tässä rivissä:
+```
+header.appendChild(room);
+```
+appendChild odottaa DOM-solmua, mutta room on merkkijono.
+
+Käytä jompaakumpaa näistä:
+
+#### Yksinkertaisin tapa (suositeltu):
+```
+header.textContent = room;
+```
+#### Vaihtoehto DOM-solmulla:
+```
+header.appendChild(document.createTextNode(room));
+```
+Jos haluat korvata vanhan tekstin joka haussa, käytä nimenomaan `textContent`, ei `appendChild`.
