@@ -1,5 +1,5 @@
 const express = require("express");
-const controller = require("../controllers/reservationsController");
+const controller = require("../controllers");
 
 // Luodaan router-muuttuja
 const router = express.Router();
